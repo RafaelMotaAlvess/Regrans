@@ -1,0 +1,265 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Existing release tag to build (for example, v0.1.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  source:
+    name: Source package (Linux)
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.ref || github.ref_name }}
+      R_KEEP_PKG_SOURCE: yes
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Verify release tag is on master
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "::error::Release tag must have the form vX.Y.Z"
+            exit 1
+          }
+          tag_commit="$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}")"
+          test "$tag_commit" = "$(git rev-parse HEAD)"
+          git fetch --no-tags origin master:refs/remotes/origin/master
+          git merge-base --is-ancestor "$tag_commit" refs/remotes/origin/master || {
+            echo "::error::Release tag must point to a commit on master"
+            exit 1
+          }
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          needs: check
+
+      - name: Verify DESCRIPTION and NEWS.md
+        id: metadata
+        shell: bash
+        run: |
+          mkdir -p dist
+          Rscript ci/release-metadata.R "$RELEASE_TAG" dist/release-notes.md
+
+      - name: Build and check source package
+        shell: bash
+        env:
+          VERSION: ${{ steps.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          R CMD build --no-manual .
+          mkdir -p dist
+          mv "Regrans_${VERSION}.tar.gz" dist/
+          R CMD check --no-manual --as-cran "dist/Regrans_${VERSION}.tar.gz"
+          mkdir -p "$RUNNER_TEMP/regrans-source-lib"
+          R CMD INSTALL -l "$RUNNER_TEMP/regrans-source-lib" "dist/Regrans_${VERSION}.tar.gz"
+          SMOKE_LIB="$RUNNER_TEMP/regrans-source-lib" Rscript -e '
+            library(Regrans, lib.loc = Sys.getenv("SMOKE_LIB"))
+            stopifnot(as.character(packageVersion("Regrans", lib.loc = Sys.getenv("SMOKE_LIB"))) == Sys.getenv("VERSION"))
+          '
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-source
+          if-no-files-found: error
+          path: dist/
+
+  windows:
+    name: Windows x64 binary
+    needs: source
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.source.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-source
+          path: source
+
+      - name: Build and install Windows package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = Join-Path $PWD "source/Regrans_$($env:VERSION).tar.gz"
+          $buildLib = Join-Path $env:RUNNER_TEMP 'regrans-build-lib'
+          $smokeLib = Join-Path $env:RUNNER_TEMP 'regrans-smoke-lib'
+          New-Item -ItemType Directory -Force $buildLib, $smokeLib, 'dist' | Out-Null
+          & Rscript -e 'stopifnot(.Machine$sizeof.pointer == 8L)'
+          if ($LASTEXITCODE -ne 0) { throw 'Expected a 64-bit R installation' }
+          & R CMD INSTALL --build -l $buildLib $source
+          if ($LASTEXITCODE -ne 0) { throw 'Windows binary build failed' }
+          $built = "Regrans_$($env:VERSION).zip"
+          if (!(Test-Path $built)) { throw "Missing binary: $built" }
+          $rMinor = & Rscript -e 'parts <- unclass(getRversion())[[1]]; cat(paste(parts[1:2], collapse="."))'
+          if ($LASTEXITCODE -ne 0) { throw 'Could not read the R version' }
+          $asset = "dist/Regrans_$($env:VERSION)-windows-x86_64-R$rMinor.zip"
+          Move-Item $built $asset
+          & R CMD INSTALL -l $smokeLib $asset
+          if ($LASTEXITCODE -ne 0) { throw 'Windows binary installation failed' }
+          $env:SMOKE_LIB = $smokeLib
+          & Rscript -e 'library(Regrans, lib.loc = Sys.getenv("SMOKE_LIB")); stopifnot(as.character(packageVersion("Regrans", lib.loc = Sys.getenv("SMOKE_LIB"))) == Sys.getenv("VERSION"))'
+          if ($LASTEXITCODE -ne 0) { throw 'Windows binary smoke test failed' }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          if-no-files-found: error
+          path: dist/*.zip
+
+  macos:
+    name: macOS ${{ matrix.arch }} binary
+    needs: source
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15-intel
+            arch: x86_64
+          - os: macos-15
+            arch: arm64
+    env:
+      VERSION: ${{ needs.source.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-source
+          path: source
+
+      - name: Build and install macOS package
+        shell: bash
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "$EXPECTED_ARCH"
+          r_arch="$(Rscript -e 'cat(R.version$arch)')"
+          if [ "$EXPECTED_ARCH" = arm64 ]; then
+            [[ "$r_arch" = arm64 || "$r_arch" = aarch64 ]]
+          else
+            test "$r_arch" = x86_64
+          fi
+          mkdir -p "$RUNNER_TEMP/regrans-build-lib" "$RUNNER_TEMP/regrans-smoke-lib" dist
+          R CMD INSTALL --build -l "$RUNNER_TEMP/regrans-build-lib" "source/Regrans_${VERSION}.tar.gz"
+          shopt -s nullglob
+          binaries=(Regrans_"${VERSION}"*.tgz Regrans_"${VERSION}"*.tar.xz
+                    Regrans_"${VERSION}"*.tar.bz2 Regrans_"${VERSION}"*.tar.zst
+                    Regrans_"${VERSION}"*.tar.zstd)
+          test "${#binaries[@]}" -eq 1
+          built="${binaries[0]}"
+          case "$built" in
+            *.tgz) extension=.tgz ;;
+            *.tar.xz) extension=.tar.xz ;;
+            *.tar.bz2) extension=.tar.bz2 ;;
+            *.tar.zst) extension=.tar.zst ;;
+            *.tar.zstd) extension=.tar.zstd ;;
+          esac
+          r_minor="$(Rscript -e 'parts <- unclass(getRversion())[[1]]; cat(paste(parts[1:2], collapse="."))')"
+          asset="dist/Regrans_${VERSION}-macos-${EXPECTED_ARCH}-R${r_minor}${extension}"
+          mv "$built" "$asset"
+          R CMD INSTALL -l "$RUNNER_TEMP/regrans-smoke-lib" "$asset"
+          SMOKE_LIB="$RUNNER_TEMP/regrans-smoke-lib" Rscript -e '
+            library(Regrans, lib.loc = Sys.getenv("SMOKE_LIB"))
+            stopifnot(as.character(packageVersion("Regrans", lib.loc = Sys.getenv("SMOKE_LIB"))) == Sys.getenv("VERSION"))
+          '
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos-${{ matrix.arch }}
+          if-no-files-found: error
+          path: dist/Regrans_*
+
+  publish:
+    name: Publish GitHub Release
+    needs: [source, windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_TAG: ${{ inputs.ref || github.ref_name }}
+      VERSION: ${{ needs.source.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: dist
+
+      - name: Verify assets and calculate checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s dist/release-notes.md
+          test -f "dist/Regrans_${VERSION}.tar.gz"
+          test "$(find dist -maxdepth 1 -type f -name "Regrans_${VERSION}-windows-x86_64-R*.zip" | wc -l)" -eq 1
+          test "$(find dist -maxdepth 1 -type f -name "Regrans_${VERSION}-macos-x86_64-R*" | wc -l)" -eq 1
+          test "$(find dist -maxdepth 1 -type f -name "Regrans_${VERSION}-macos-arm64-R*" | wc -l)" -eq 1
+          test "$(find dist -maxdepth 1 -type f -name "Regrans_${VERSION}*" | wc -l)" -eq 4
+          cd dist
+          sha256sum Regrans_* > SHA256SUMS
+          sha256sum --check SHA256SUMS
+
+      - name: Create or finish draft release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft > release-state.txt 2>/dev/null; then
+            if [ "$(cat release-state.txt)" != true ]; then
+              echo "::error::Release $RELEASE_TAG is already published; refusing to replace it"
+              exit 1
+            fi
+            gh release upload "$RELEASE_TAG" dist/Regrans_* dist/SHA256SUMS --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$RELEASE_TAG" --title "$RELEASE_TAG" --notes-file dist/release-notes.md --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$RELEASE_TAG" dist/Regrans_* dist/SHA256SUMS \
+              --verify-tag --draft --title "$RELEASE_TAG" \
+              --notes-file dist/release-notes.md --repo "$GITHUB_REPOSITORY"
+          fi
+          gh release edit "$RELEASE_TAG" --draft=false --repo "$GITHUB_REPOSITORY"
