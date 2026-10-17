@@ -11,7 +11,7 @@ pkg.win <- paste0(pkg.name, ver, ".zip")
 
 # Regrans `r ver`
 
-[![Build Status](https://travis-ci.org/rodrigosantana/Regrans.svg)](https://travis-ci.org/rodrigosantana/Regrans)
+[![CI](https://github.com/RafaelMotaAlvess/Regrans/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RafaelMotaAlvess/Regrans/actions/workflows/R-CMD-check.yaml)
 
 Segmented Linear Regression Models
 
@@ -67,6 +67,23 @@ instw <- paste0("install.packages(", "\"", pkg.win, "\"", ", repos = NULL,\n",
                 "                 dependencies = TRUE)")
 cat(instw, sep = "\n")
 ```
+
+## Local checks
+
+From the package root, install the check tools once in your personal R library,
+then run both checks:
+
+```{bash, eval=FALSE}
+Rscript ci/install-local.R
+Rscript ci/check-local.R
+```
+
+The second command runs `R CMD check --no-manual --as-cran` and the default
+`goodpractice` checks,
+excluding its `rcmdcheck` group. Check warnings and errors fail the command;
+`goodpractice` findings are reported without failing it.
+[Pandoc](https://pandoc.org/installing.html) must be on your `PATH` for all
+URL checks to run.
 
 ## Authors
 
