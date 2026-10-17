@@ -7,4 +7,10 @@ README.md
 README.Rmd
 buildPkg.R
 downloads/
-^\.travis\.yml$
+^\.github$
+^check$
+^ci$
+^docs$
+^SOURCES\.md$
+^\.ai-memory\.toml$
+^\.vscode$
