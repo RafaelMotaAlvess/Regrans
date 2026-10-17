@@ -1,11 +1,18 @@
 Package: Regrans
 Title: Segmented Linear Regression Models
 Version: 0.0.1
-Authors@R: as.person(c(
-    "Rodrigo Sant'Ana <rsantana@univali.br> [aut, cre]",
-    "Fernando de Pol Mayer <fernando.mayer@ufpr.br> [ctb]",
-    "Paulo Ricardo Pezzuto <pezzuto@univali.br> [aut]"))
-Description: This package fits segmented linear regression models.
+Authors@R: c(
+    person(given = "Rodrigo", family = "Sant'Ana",
+           email = "rsantana@univali.br", role = c("aut", "cre")),
+    person(given = "Fernando de Pol", family = "Mayer",
+           email = "fernando.mayer@ufpr.br", role = "ctb"),
+    person(given = "Paulo Ricardo", family = "Pezzuto",
+           email = "pezzuto@univali.br", role = "aut"),
+    person(given = "Rafael Mota", family = "Alves",
+           email = "rafaelmotaalves.sc@gmail.com", role = "aut"))
+Description: Fits two-segment linear regression models by evaluating candidate
+    split points and selecting the split that minimizes the total residual sum
+    of squares. Includes plotting, summary, and analysis of covariance helpers.
 Depends:
     R (>= 3.2.2)
 License: GPL-3

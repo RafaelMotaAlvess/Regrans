@@ -204,6 +204,7 @@ Use it to quickly test package workflows and examples.
 - [Rodrigo Sant'Ana](http://rodrigosantana.github.io)
 - [Fernando Mayer](http://www.leg.ufpr.br/~fernandomayer)
 - Paulo Ricardo Pezzuto
+- [Rafael Mota Alves](https://github.com/RafaelMotaAlvess)
 
 ---
 

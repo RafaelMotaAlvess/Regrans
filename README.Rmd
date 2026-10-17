@@ -89,6 +89,8 @@ URL checks to run.
 
 - [Rodrigo Sant'Ana](http://rodrigosantana.github.io)
 - [Fernando Mayer](http://www.leg.ufpr.br/~fernandomayer)
+- Paulo Ricardo Pezzuto
+- [Rafael Mota Alves](https://github.com/RafaelMotaAlvess)
 
 ## Documentation
 
