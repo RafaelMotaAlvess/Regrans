@@ -2,20 +2,20 @@
 
 Regrans is currently distributed through GitHub. It is not published on CRAN.
 
-## Current development version
+## Tagged version
 
 From an R session:
 
 ```r
 install.packages("remotes") # if needed
-remotes::install_github("RafaelMotaAlvess/Regrans")
+remotes::install_github("RafaelMotaAlvess/Regrans@v0.1.0")
 ```
 
-This installs the current GitHub branch selected by `remotes` (normally the repository's default branch). Use `remotes::install_github("RafaelMotaAlvess/Regrans@<ref>")` if you need a specific branch, commit, or tag.
+This installs the tagged release from source. To install the current development version, omit `@v0.1.0`; `remotes` then selects the repository's default branch. You can also use `remotes::install_github("RafaelMotaAlvess/Regrans@<ref>")` for a specific branch or commit.
 
 ## Tagged releases
 
-After the first release is published, select an asset from [GitHub Releases](https://github.com/RafaelMotaAlvess/Regrans/releases). The release workflow builds one R source package and uses that source to build platform-specific binaries:
+Select an asset from [GitHub Releases](https://github.com/RafaelMotaAlvess/Regrans/releases). The release workflow builds one R source package and uses that source to build platform-specific binaries:
 
 | System | Asset | Install type |
 | --- | --- | --- |

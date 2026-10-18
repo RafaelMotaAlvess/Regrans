@@ -21,14 +21,14 @@ Regrans helps you explore data whose relationship changes across the range of an
 
 ## Installation
 
-Regrans is not on CRAN yet. Install the development version from GitHub:
+Regrans is not on CRAN yet. Install the latest tagged version from GitHub:
 
 ```r
 # install.packages("remotes")
-remotes::install_github("RafaelMotaAlvess/Regrans")
+remotes::install_github("RafaelMotaAlvess/Regrans@v0.1.0")
 ```
 
-Tagged versions will be available through [GitHub Releases](https://github.com/RafaelMotaAlvess/Regrans/releases). The [installation guide](docs/installation.md) explains how to choose a source or platform-specific package.
+For the development version, omit `@v0.1.0`. The [GitHub Releases](https://github.com/RafaelMotaAlvess/Regrans/releases) page also provides a source package and Windows and macOS binaries. The [installation guide](docs/installation.md) explains how to choose and install one.
 
 ## Usage
 

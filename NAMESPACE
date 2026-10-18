@@ -3,6 +3,8 @@
 S3method(summary,regrans)
 export(plot_regrans)
 export(regrans)
-importFrom(graphics,lines)
-importFrom(graphics,plot)
+importFrom(graphics,
+  lines,
+  plot
+)
 importFrom(stats,lm)

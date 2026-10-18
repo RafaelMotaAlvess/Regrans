@@ -1,17 +1,23 @@
-##' @title Interactive Routine for Fit Segmented Linear Regression
-##'     Models
+##' @title Fit a Two-Segment Linear Regression
 ##' @name regrans
 ##'
-##' @description Fit segmented linear models
+##' @description Fit two independent linear models after selecting the split
+##'     with the smallest combined residual sum of squares.
 ##' @param x a numeric vector.
 ##' @param y a numeric vector.
 ##' @param n.min minimum number of points (x,y) to be considered in a
 ##'     linear model.
-##' @return a data frame containing the results of each model fitted.
+##' @return An object of class \code{regrans}, a list containing the fitted
+##'     \code{lm} models named \code{left} and \code{right}.
 ##' @author Rodrigo Sant'Ana \email{rsantana@@univali.br}, Fernando
 ##'     Mayer \email{fernando.mayer@@ufpr.br}
 ##'
 ##' @importFrom stats lm
+##'
+##' @examples
+##' data(simdata)
+##' fit <- regrans(simdata$x, simdata$y)
+##' summary(fit)
 ##'
 ##' @export
 regrans <- function(x, y, n.min = 5) {

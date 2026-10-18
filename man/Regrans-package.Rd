@@ -2,8 +2,33 @@
 % Please edit documentation in R/Regrans_package.R
 \docType{package}
 \name{Regrans-package}
+\alias{Regrans}
 \alias{Regrans-package}
 \title{Fits Segmented Linear Regression Models}
 \description{
 Fits Segmented Linear Regression Models.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/RafaelMotaAlvess/Regrans}
+  \item Report bugs at \url{https://github.com/RafaelMotaAlvess/Regrans/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Rodrigo Sant'Ana \email{rsantana@univali.br}
+
+Authors:
+\itemize{
+  \item Rodrigo Sant'Ana \email{rsantana@univali.br}
+  \item Paulo Ricardo Pezzuto \email{pezzuto@univali.br}
+  \item Rafael Mota Alves \email{rafaelmotaalves.sc@gmail.com}
+}
+
+Other contributors:
+\itemize{
+  \item Fernando de Pol Mayer \email{fernando.mayer@ufpr.br} [contributor]
+}
+
 }

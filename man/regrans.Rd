@@ -2,8 +2,7 @@
 % Please edit documentation in R/regrans.R
 \name{regrans}
 \alias{regrans}
-\title{Interactive Routine for Fit Segmented Linear Regression
-    Models}
+\title{Fit a Two-Segment Linear Regression}
 \usage{
 regrans(x, y, n.min = 5)
 }
@@ -16,10 +15,18 @@ regrans(x, y, n.min = 5)
 linear model.}
 }
 \value{
-a data frame containing the results of each model fitted.
+An object of class \code{regrans}, a list containing the fitted
+    \code{lm} models named \code{left} and \code{right}.
 }
 \description{
-Fit segmented linear models
+Fit two independent linear models after selecting the split
+    with the smallest combined residual sum of squares.
+}
+\examples{
+data(simdata)
+fit <- regrans(simdata$x, simdata$y)
+summary(fit)
+
 }
 \author{
 Rodrigo Sant'Ana \email{rsantana@univali.br}, Fernando
