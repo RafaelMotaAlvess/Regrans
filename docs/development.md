@@ -1,6 +1,6 @@
 # Development workflow
 
-This guide records the repository's current contribution and release practices. The package's [current algorithm](architecture.md) and the [TCC research plan](context.md) serve different purposes; proposals in the research plan are not implemented features.
+This guide records the repository's current contribution and release practices. For the implemented model behavior, see the [implementation guide](architecture.md).
 
 ## Make and check a change
 
@@ -15,7 +15,7 @@ The script runs `R CMD check --no-manual --as-cran` via `rcmdcheck`, then `goodp
 
 The [`R-CMD-check` workflow](../.github/workflows/R-CMD-check.yaml) runs on pushes to branches and on pull requests. It uses the same division of responsibility: `R CMD check` validates the package; `goodpractice` reports complementary quality findings. A green check does not establish statistical correctness, so behavior changes also need focused examples or tests.
 
-The package repository does not carry its own `renv` lockfile. Development inside the parent TCC workspace can use that workspace's `renv`; a standalone clone can use a normal R user library and the two `ci/` scripts above. Check which project is active with `renv::project()` before installing into a shared research environment.
+The package repository does not carry its own `renv` lockfile. Contributors can use a normal R user library and the two `ci/` scripts above.
 
 ## Keep the README and NEWS current
 
