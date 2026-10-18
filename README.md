@@ -1,81 +1,65 @@
+<!-- README.md is generated from README.Rmd. Please edit that file. -->
 
+# Regrans
 
-# Regrans 0.0.1
+<!-- badges: start -->
 
-[![Build Status](https://travis-ci.org/rodrigosantana/Regrans.svg)](https://travis-ci.org/rodrigosantana/Regrans)
+[![R-CMD-check](https://github.com/RafaelMotaAlvess/Regrans/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RafaelMotaAlvess/Regrans/actions/workflows/R-CMD-check.yaml) [![License: GPL-3](https://img.shields.io/badge/License-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
-Segmented Linear Regression Models
+<!-- badges: end -->
 
-## Introduction
+## Overview
 
-Regrans was designed to fit segmented regression models.
+Regrans helps you explore data whose relationship changes across the range of an explanatory variable. It fits two linear segments and selects the split with the smallest combined residual sum of squares. You can inspect each fitted line and plot the result.
 
-## Download and install
+## Installation
 
-### Linux/Mac
+Regrans is not on CRAN yet. Install the development version from GitHub:
 
-Use the `devtools` package (available from
-[CRAN](http://cran-r.c3sl.ufpr.br/web/packages/devtools/index.html)) to
-install automatically from the official Git repository:
-
-
-```r
-library(devtools)
-install_github("rodrigosantana/Regrans")
+``` r
+# install.packages("remotes")
+remotes::install_github("RafaelMotaAlvess/Regrans")
 ```
 
-Alternatively, download the package tarball: [Regrans_0.0.1.tar.gz][]
-and run from a UNIX terminal (make sure you are on the container file
-directory):
+Tagged versions will be available through [GitHub Releases](https://github.com/RafaelMotaAlvess/Regrans/releases). The [installation guide](docs/installation.md) explains how to choose a source or platform-specific package.
 
+## Usage
 
-```
-R CMD INSTALL -l /path/to/your/R/library Regrans_0.0.1.tar.gz
-```
+``` r
+library(Regrans)
 
-Or, inside an `R` session:
+x <- 1:20
+y <- ifelse(x <= 10, 2 + x, -15 + 3 * x) + sin(x) / 5
 
-
-
-```
-install.packages("Regrans_0.0.1.tar.gz", repos = NULL,
-                 lib.loc = "/path/to/your/R/library",
-                 dependencies = TRUE)
-```
-
-Note that `-l /path/to/your/R/library` in the former and `lib.loc =
-"/path/to/your/R/library"` in the latter are optional. Only use it if you
-want to install in a personal library, other than the standard R
-library.
-
-### Windows
-
-Download Windows binary version: [Regrans_0.0.1.zip][] (**do not unzip
-it under Windows**), put the file in your working directory, and from
-inside `R`:
-
-
-```
-install.packages("Regrans_0.0.1.zip", repos = NULL,
-                 dependencies = TRUE)
+fit <- regrans(x, y)
+range(fit$left$model$X)   # observations assigned to the first line
+#> [1]  1 10
+range(fit$right$model$X)  # observations assigned to the second line
+#> [1] 11 20
+summary(fit)              # summaries of both linear models
+plot_regrans(fit, pch = 16)
 ```
 
-## Authors
-
-- [Rodrigo Sant'Ana](http://rodrigosantana.github.io)
-- [Fernando Mayer](http://www.leg.ufpr.br/~fernandomayer)
+`fit` contains the `left` and `right` linear models. The lines are fitted independently, so they need not meet at the split. See the [usage guide](docs/usage.md) for data requirements and interpretation.
 
 ## Documentation
 
-The reference manual in PDF can be found here: [Regrans-manual.pdf][]
+- [Usage and current scope](docs/usage.md)
+- [Installation on Linux, Windows, and macOS](docs/installation.md)
+- [Documentation for contributors](docs/README.md)
+- [Changes in development and released versions](NEWS.md)
 
-## License
+In R, use `help(package = "Regrans")` for the installed reference pages.
 
-This package is released under the
-[GNU General Public License (GPL) v. 3.0](http://www.gnu.org/licenses/gpl-3.0.html)
+## Getting help
 
+If you find a bug, open a [GitHub issue](https://github.com/RafaelMotaAlvess/Regrans/issues) with a minimal reproducible example.
 
+## Authors
 
-[Regrans_0.0.1.tar.gz]: https://github.com/rodrigosantana/Regrans/blob/master/downloads/Regrans_0.0.1.tar.gz?raw=true
-[Regrans_0.0.1.zip]: https://github.com/rodrigosantana/Regrans/blob/master/downloads/Regrans_0.0.1.zip?raw=true
-[Regrans-manual.pdf]: https://github.com/rodrigosantana/Regrans/raw/master/downloads/Regrans-manual.pdf
+- Rodrigo Sant’Ana
+- Fernando Mayer
+- Paulo Ricardo Pezzuto
+- Rafael Mota Alves
+
+Regrans is released under [GPL-3](https://www.gnu.org/licenses/gpl-3.0.html).

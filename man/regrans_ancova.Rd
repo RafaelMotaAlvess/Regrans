@@ -9,9 +9,6 @@ regrans_ancova(obj)
 }
 \arguments{
 \item{obj}{\code{regrans} object, result of \code{regrans} function.}
-
-\item{...}{further arguments passed to or from other methods to
-plot.}
 }
 \description{
 Parameter comparisons of a segmented linear regression

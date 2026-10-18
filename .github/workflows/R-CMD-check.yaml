@@ -1,0 +1,58 @@
+name: R-CMD-check
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  package-quality:
+    name: R CMD check and goodpractice (Ubuntu, R release)
+    runs-on: ubuntu-latest
+    env:
+      R_KEEP_PKG_SOURCE: yes
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+
+      - id: dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::rcmdcheck
+            any::goodpractice
+          needs: check
+
+      - name: R CMD check
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual", "--as-cran")'
+          error-on: '"warning"'
+
+      - name: goodpractice
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        env:
+          GP_EXCLUDE_CHECK_GROUPS: rcmdcheck
+        shell: Rscript {0}
+        run: |
+          report <- goodpractice::gp(".")
+          print(report)
+
+          failed <- goodpractice::failed_checks(report)
+          skipped <- sum(is.na(goodpractice::results(report)$passed))
+          summary <- Sys.getenv("GITHUB_STEP_SUMMARY")
+          cat("## goodpractice\n\n", length(failed), " failed checks; ",
+              skipped, " skipped.\n\n", sep = "", file = summary)
+          if (length(failed)) {
+            cat(paste0("- `", failed, "`\n"), sep = "", file = summary,
+                append = TRUE)
+          }

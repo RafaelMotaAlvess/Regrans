@@ -1,3 +1,7 @@
 .Rproj.user
 .Rhistory
 .RData
+dist/
+
+# Local research notes
+/docs/context.md

@@ -1,96 +1,72 @@
-```{r, echo=FALSE, include=FALSE}
-## Get VERSION and create file names
-ver <- sub(x = grep(x = readLines("DESCRIPTION"),
-           pattern = "^Version: ",
-           value = TRUE),
-           pattern = "^Version: ", replacement = "")
-pkg.name <- "Regrans_"
-pkg.source <- paste0(pkg.name, ver, ".tar.gz")
-pkg.win <- paste0(pkg.name, ver, ".zip")
+---
+output:
+  github_document:
+    pandoc_args: ["--wrap=none"]
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file. -->
+
+# Regrans
+
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/RafaelMotaAlvess/Regrans/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RafaelMotaAlvess/Regrans/actions/workflows/R-CMD-check.yaml)
+[![License: GPL-3](https://img.shields.io/badge/License-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
+
+<!-- badges: end -->
+
+## Overview
+
+Regrans helps you explore data whose relationship changes across the range of an explanatory variable. It fits two linear segments and selects the split with the smallest combined residual sum of squares. You can inspect each fitted line and plot the result.
+
+## Installation
+
+Regrans is not on CRAN yet. Install the development version from GitHub:
+
+```r
+# install.packages("remotes")
+remotes::install_github("RafaelMotaAlvess/Regrans")
 ```
 
-# Regrans `r ver`
+Tagged versions will be available through [GitHub Releases](https://github.com/RafaelMotaAlvess/Regrans/releases). The [installation guide](docs/installation.md) explains how to choose a source or platform-specific package.
 
-[![Build Status](https://travis-ci.org/rodrigosantana/Regrans.svg)](https://travis-ci.org/rodrigosantana/Regrans)
+## Usage
 
-Segmented Linear Regression Models
+```r
+library(Regrans)
 
-## Introduction
+x <- 1:20
+y <- ifelse(x <= 10, 2 + x, -15 + 3 * x) + sin(x) / 5
 
-Regrans was designed to fit segmented regression models.
-
-## Download and install
-
-### Linux/Mac
-
-Use the `devtools` package (available from
-[CRAN](http://cran-r.c3sl.ufpr.br/web/packages/devtools/index.html)) to
-install automatically from the official Git repository:
-
-```{r, eval=FALSE}
-library(devtools)
-install_github("rodrigosantana/Regrans")
+fit <- regrans(x, y)
+range(fit$left$model$X)   # observations assigned to the first line
+#> [1]  1 10
+range(fit$right$model$X)  # observations assigned to the second line
+#> [1] 11 20
+summary(fit)              # summaries of both linear models
+plot_regrans(fit, pch = 16)
 ```
 
-Alternatively, download the package tarball: [`r pkg.source`][]
-and run from a UNIX terminal (make sure you are on the container file
-directory):
-
-```{r, echo=FALSE, comment=NA}
-cmd <- paste("R CMD INSTALL -l /path/to/your/R/library", pkg.source)
-cat(cmd, sep = "\n")
-```
-
-Or, inside an `R` session:
-
-
-```{r, echo=FALSE, comment=NA}
-inst <- paste0("install.packages(", "\"", pkg.source, "\"", ", repos = NULL,\n",
-               "                 lib.loc = \"/path/to/your/R/library\",\n",
-               "                 dependencies = TRUE)")
-cat(inst, sep = "\n")
-```
-
-Note that `-l /path/to/your/R/library` in the former and `lib.loc =
-"/path/to/your/R/library"` in the latter are optional. Only use it if you
-want to install in a personal library, other than the standard R
-library.
-
-### Windows
-
-Download Windows binary version: [`r pkg.win`][] (**do not unzip
-it under Windows**), put the file in your working directory, and from
-inside `R`:
-
-```{r, echo=FALSE, comment=NA}
-instw <- paste0("install.packages(", "\"", pkg.win, "\"", ", repos = NULL,\n",
-                "                 dependencies = TRUE)")
-cat(instw, sep = "\n")
-```
-
-## Authors
-
-- [Rodrigo Sant'Ana](http://rodrigosantana.github.io)
-- [Fernando Mayer](http://www.leg.ufpr.br/~fernandomayer)
+`fit` contains the `left` and `right` linear models. The lines are fitted independently, so they need not meet at the split. See the [usage guide](docs/usage.md) for data requirements and interpretation.
 
 ## Documentation
 
-The reference manual in PDF can be found here: [Regrans-manual.pdf][]
+- [Usage and current scope](docs/usage.md)
+- [Installation on Linux, Windows, and macOS](docs/installation.md)
+- [Documentation for contributors](docs/README.md)
+- [Changes in development and released versions](NEWS.md)
 
-## License
+In R, use `help(package = "Regrans")` for the installed reference pages.
 
-This package is released under the
-[GNU General Public License (GPL) v. 3.0](http://www.gnu.org/licenses/gpl-3.0.html)
+## Getting help
 
-```{r, echo=FALSE, include=FALSE}
-pkg.source.link <- paste0(
-    "https://github.com/rodrigosantana/Regrans/blob/master/downloads/",
-    pkg.source, "?raw=true")
-pkg.win.link <- paste0(
-    "https://github.com/rodrigosantana/Regrans/blob/master/downloads/",
-    pkg.win, "?raw=true")
-```
+If you find a bug, open a [GitHub issue](https://github.com/RafaelMotaAlvess/Regrans/issues) with a minimal reproducible example.
 
-[`r pkg.source`]: `r pkg.source.link`
-[`r pkg.win`]: `r pkg.win.link`
-[Regrans-manual.pdf]: https://github.com/rodrigosantana/Regrans/raw/master/downloads/Regrans-manual.pdf
+## Authors
+
+- Rodrigo Sant'Ana
+- Fernando Mayer
+- Paulo Ricardo Pezzuto
+- Rafael Mota Alves
+
+Regrans is released under [GPL-3](https://www.gnu.org/licenses/gpl-3.0.html).
