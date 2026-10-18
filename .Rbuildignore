@@ -12,5 +12,6 @@ downloads/
 ^ci$
 ^docs$
 ^SOURCES\.md$
+^AGENTS\.md$
 ^\.ai-memory\.toml$
 ^\.vscode$
