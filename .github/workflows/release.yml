@@ -153,7 +153,7 @@ jobs:
           New-Item -ItemType Directory -Force $buildLib, $smokeLib, 'dist' | Out-Null
           & Rscript -e 'stopifnot(.Machine$sizeof.pointer == 8L)'
           if ($LASTEXITCODE -ne 0) { throw 'Expected a 64-bit R installation' }
-          & R CMD INSTALL --build -l $buildLib $source
+          & R.exe CMD INSTALL --build -l $buildLib $source
           if ($LASTEXITCODE -ne 0) { throw 'Windows binary build failed' }
           $built = "Regrans_$($env:VERSION).zip"
           if (!(Test-Path $built)) { throw "Missing binary: $built" }
@@ -161,7 +161,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Could not read the R version' }
           $asset = "dist/Regrans_$($env:VERSION)-windows-x86_64-R$rMinor.zip"
           Move-Item $built $asset
-          & R CMD INSTALL -l $smokeLib $asset
+          & R.exe CMD INSTALL -l $smokeLib $asset
           if ($LASTEXITCODE -ne 0) { throw 'Windows binary installation failed' }
           $env:SMOKE_LIB = $smokeLib
           & Rscript -e 'library(Regrans, lib.loc = Sys.getenv("SMOKE_LIB")); stopifnot(as.character(packageVersion("Regrans", lib.loc = Sys.getenv("SMOKE_LIB"))) == Sys.getenv("VERSION"))'
