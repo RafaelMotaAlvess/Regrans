@@ -1,6 +1,6 @@
 # Current implementation
 
-This page describes the package **as implemented now**. The separate [TCC context](context.md) records research goals and possible future interfaces.
+This page describes the package **as implemented now**.
 
 ## Fit selection
 
