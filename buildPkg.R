@@ -11,7 +11,6 @@ if (!basename(getwd()) == "Regrans") {
 ##----------------------------------------------------------------------
 ## Packages
 library(devtools)
-library(knitr)
 
 ##----------------------------------------------------------------------
 ## Run checks
@@ -26,7 +25,7 @@ document()
 check_man()
 
 ## Check functions, datasets, run examples, etc. Using cleanup = FALSE
-## and check_dir = "../" will create a directory named FishMaps.Rcheck
+## and check_dir = "../" will create a directory named Regrans.Rcheck
 ## with all the logs, manuals, figures from examples, etc.
 check(cleanup = FALSE, manual = TRUE, vignettes = FALSE,
       check_dir = "../")
@@ -39,37 +38,15 @@ check(cleanup = FALSE, manual = TRUE, vignettes = FALSE,
 
 ## Show all exported objects.
 ls("package:Regrans")
-packageVersion("Regrans")
+version <- read.dcf("DESCRIPTION")[1L, "Version"]
+cat("Package version:", version, "\n")
 
 ## Build the package (it will be one directory up)
 build(manual = TRUE, vignettes = FALSE)
-# build the binary version for windows (not used)
-# build_win() # not used here. see below
 
 ##----------------------------------------------------------------------
 ## Test installation.
 
 ## Test install with install.packages()
-pkg <- paste0("../Regrans_", packageVersion("Regrans"), ".tar.gz")
-install.packages(pkg, repos = NULL)
-
-##----------------------------------------------------------------------
-## Generate README.md
-knit(input = "README.Rmd")
-
-##----------------------------------------------------------------------
-## Sending package tarballs and manual to remote server to be
-## downloadable
-
-## Create Windows version
-pkg.win <- paste0("../Regrans_", packageVersion("Regrans"), ".zip")
-cmd.win <- paste("cd ../Regrans.Rcheck && zip -r", pkg.win, "Regrans")
-system(cmd.win)
-
-## Link to manual
-man <- "../Regrans.Rcheck/Regrans-manual.pdf"
-
-## Send to downloads/ folder
-dest <- "downloads/"
-file.copy(c(pkg, pkg.win, man), dest, overwrite = TRUE)
-##----------------------------------------------------------------------
+pkg <- paste0("../Regrans_", version, ".tar.gz")
+install.packages(pkg, repos = NULL, type = "source")
