@@ -9,7 +9,7 @@
 #' @param x A finite numeric explanatory vector, or a formula of the form
 #'   `response ~ predictor` with bare column names.
 #' @param y A finite numeric response vector when `x` is a vector.
-#' @param n.min Minimum number of observations on each side (at least 3).
+#' @param n_min Minimum number of observations on each side (at least 3).
 #' @param data A data frame containing the columns in `x` when `x` is a
 #'   formula.
 #' @return An object of class `regrans`. `left` and `right` are ordinary
@@ -23,7 +23,7 @@
 #' summary(fit)
 #' fit$split
 #' @export
-regrans <- function(x, y, n.min = 5, data = NULL) {
+regrans <- function(x, y, n_min = 5, data = NULL) {
   if (inherits(x, "formula")) {
     if (!missing(y)) {
       stop("Do not supply y when x is a formula.", call. = FALSE)
@@ -36,9 +36,9 @@ regrans <- function(x, y, n.min = 5, data = NULL) {
     input <- vector_regrans_input(x, y, data)
   }
 
-  n.min <- validate_regrans_input(input$x, input$y, n.min)
-  fit <- regranslm(input$x, input$y, n.min)
-  assemble_regrans_fit(fit, input, n.min)
+  n_min <- validate_regrans_input(input$x, input$y, n_min)
+  fit <- regranslm(input$x, input$y, n_min) # nolint: object_usage_linter.
+  assemble_regrans_fit(fit, input, n_min)
 }
 
 #' Read a two-variable formula without evaluating transformations
@@ -49,11 +49,13 @@ regrans <- function(x, y, n.min = 5, data = NULL) {
 #' @noRd
 formula_regrans_input <- function(formula, data) {
   if (!is.data.frame(data)) {
-    stop("data must be a data frame for the formula interface.",
-         call. = FALSE)
+    stop(
+      "data must be a data frame for the formula interface.",
+      call. = FALSE
+    )
   }
   if (length(formula) != 3L || !is.symbol(formula[[2L]]) ||
-      !is.symbol(formula[[3L]])) {
+        !is.symbol(formula[[3L]])) {
     stop("Use a formula with bare column names: response ~ predictor.",
          call. = FALSE)
   }
@@ -84,22 +86,22 @@ vector_regrans_input <- function(x, y, data) {
 #' Validate observations and minimum segment size
 #'
 #' @param x,y Explanatory and response vectors.
-#' @param n.min Requested minimum observations per segment.
+#' @param n_min Requested minimum observations per segment.
 #' @return The validated minimum as an integer; errors on invalid inputs.
 #' @noRd
-validate_regrans_input <- function(x, y, n.min) {
+validate_regrans_input <- function(x, y, n_min) {
   if (!valid_regrans_vectors(x, y)) {
     stop("x and y must be finite numeric vectors of equal length.",
          call. = FALSE)
   }
-  if (!valid_n_min(n.min)) {
-    stop("n.min must be one integer of at least 3.", call. = FALSE)
+  if (!valid_n_min(n_min)) {
+    stop("n_min must be one integer of at least 3.", call. = FALSE)
   }
-  if (length(x) < 2 * n.min) {
-    stop("At least 2 * n.min observations are required.",
+  if (length(x) < 2 * n_min) {
+    stop("At least 2 * n_min observations are required.",
          call. = FALSE)
   }
-  as.integer(n.min)
+  as.integer(n_min)
 }
 
 #' Check whether paired vectors can be fitted
@@ -116,30 +118,30 @@ valid_regrans_vectors <- function(x, y) {
 
 #' Check the minimum segment size argument
 #'
-#' @param n.min Candidate minimum segment size.
+#' @param n_min Candidate minimum segment size.
 #' @return `TRUE` for one integer-valued number of at least three.
 #' @noRd
-valid_n_min <- function(n.min) {
-  if (!is.numeric(n.min) || length(n.min) != 1L) {
+valid_n_min <- function(n_min) {
+  if (!is.numeric(n_min) || length(n_min) != 1L) {
     return(FALSE)
   }
-  is.finite(n.min) && n.min >= 3 && n.min == floor(n.min)
+  is.finite(n_min) && n_min >= 3 && n_min == floor(n_min)
 }
 
 #' Restore original observation order in a selected fit
 #'
 #' @param fit Output of `regranslm()` with selected models and sorted rows.
 #' @param input Validated inputs and original data.
-#' @param n.min Validated minimum segment size.
+#' @param n_min Validated minimum segment size.
 #' @return A `regrans` object with row-aligned segment and fitted values.
 #' @noRd
-assemble_regrans_fit <- function(fit, input, n.min) {
+assemble_regrans_fit <- function(fit, input, n_min) {
   if (is.null(input$data)) {
     input$data <- data.frame(x = input$x, y = input$y)
   }
   fit$data <- input$data
   fit$variables <- c(x = input$predictor, y = input$response)
-  fit$n.min <- n.min
+  fit$n_min <- n_min
 
   sorted_rows <- fit$sorted_rows
   left_rows <- sorted_rows[seq_len(fit$split$index)]

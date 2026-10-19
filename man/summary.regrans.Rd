@@ -4,12 +4,12 @@
 \alias{summary.regrans}
 \title{Summarize both fitted segments}
 \usage{
-\method{summary}{regrans}(object, correlation = FALSE, symbolic.cor = FALSE, ...)
+\method{summary}{regrans}(object, correlation = FALSE, symbolic_cor = FALSE, ...)
 }
 \arguments{
 \item{object}{A \code{regrans} object.}
 
-\item{correlation, symbolic.cor}{Arguments passed to \code{summary.lm()}.}
+\item{correlation, symbolic_cor}{Arguments passed to \code{summary.lm()}.}
 
 \item{...}{Further arguments passed to \code{summary.lm()}.}
 }

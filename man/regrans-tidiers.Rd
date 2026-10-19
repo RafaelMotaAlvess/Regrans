@@ -25,7 +25,8 @@ defined by this interface.}
 }
 \value{
 \code{tidy()} returns one coefficient row per term and segment.
-\code{glance()} returns one row with the selected split and fit scores.
+\code{glance()} returns one row with \code{n_min}, the selected split, and fit
+scores.
 \code{augment()} returns the original observations with \code{.segment},
 \code{.fitted}, and \code{.resid} columns in their original order.
 }

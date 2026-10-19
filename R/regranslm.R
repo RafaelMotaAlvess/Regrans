@@ -5,17 +5,17 @@
 #' predictor order. No continuity constraint or numerical breakpoint is used.
 #'
 #' @param x,y Validated finite numeric input vectors.
-#' @param n.min Validated minimum observations per side.
+#' @param n_min Validated minimum observations per side.
 #' @return Selected `left` and `right` models, split bounds, candidate scores,
 #'   and the row permutation used for sorting.
 #' @noRd
-regranslm <- function(x, y, n.min) {
+regranslm <- function(x, y, n_min) {
   sorted_rows <- order(x, seq_along(x))
   ordered <- data.frame(X = x[sorted_rows], Y = y[sorted_rows])
   n <- nrow(ordered)
-  split_indices <- admissible_splits(ordered$X, n.min)
+  split_indices <- admissible_splits(ordered$X, n_min)
   if (!length(split_indices)) {
-    stop("No admissible split: each side needs n.min observations and ",
+    stop("No admissible split: each side needs n_min observations and ",
          "at least two distinct x values.", call. = FALSE)
   }
 
@@ -23,7 +23,7 @@ regranslm <- function(x, y, n.min) {
     list(
       left = stats::lm(Y ~ X, data = ordered[seq_len(i), , drop = FALSE]),
       right = stats::lm(Y ~ X, data = ordered[seq.int(i + 1L, n), ,
-                                                 drop = FALSE])
+                                              drop = FALSE])
     )
   })
   left_rss <- vapply(models, function(model) model_rss(model$left), numeric(1))
@@ -57,13 +57,13 @@ regranslm <- function(x, y, n.min) {
 #' Enumerate divisions that can estimate both slopes
 #'
 #' @param x Predictor values sorted in ascending order.
-#' @param n.min Minimum observations on either side.
+#' @param n_min Minimum observations on either side.
 #' @return Integer split indices between distinct `x` values, with at least
 #'   two distinct values on each side.
 #' @noRd
-admissible_splits <- function(x, n.min) {
+admissible_splits <- function(x, n_min) {
   n <- length(x)
-  indices <- seq.int(n.min, n - n.min)
+  indices <- seq.int(n_min, n - n_min)
   indices <- indices[x[indices] < x[indices + 1L]]
   indices[vapply(indices, function(i) {
     length(unique(x[seq_len(i)])) >= 2L &&

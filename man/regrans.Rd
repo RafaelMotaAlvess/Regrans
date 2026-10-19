@@ -4,7 +4,7 @@
 \alias{regrans}
 \title{Fit two independent linear segments}
 \usage{
-regrans(x, y, n.min = 5, data = NULL)
+regrans(x, y, n_min = 5, data = NULL)
 }
 \arguments{
 \item{x}{A finite numeric explanatory vector, or a formula of the form
@@ -12,7 +12,7 @@ regrans(x, y, n.min = 5, data = NULL)
 
 \item{y}{A finite numeric response vector when \code{x} is a vector.}
 
-\item{n.min}{Minimum number of observations on each side (at least 3).}
+\item{n_min}{Minimum number of observations on each side (at least 3).}
 
 \item{data}{A data frame containing the columns in \code{x} when \code{x} is a
 formula.}

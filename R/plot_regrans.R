@@ -4,7 +4,7 @@
 #' No continuous breakpoint is estimated or displayed.
 #'
 #' @param obj A `regrans` object.
-#' @param col.lines,lty.lines,lwd.lines Length-two vectors controlling the
+#' @param col_lines,lty_lines,lwd_lines Length-two vectors controlling the
 #'   colour, line type, and line width of the left and right segments.
 #' @param ... Optional base-plot arguments `pch`, `col`, `cex`, `xlab`,
 #'   `ylab`, `main`, `xlim`, and `ylim`. Other arguments are rejected.
@@ -15,20 +15,23 @@
 #' plot_regrans(fit, pch = 16)
 #' @export
 plot_regrans <- function(obj,
-                         col.lines = c("red", "blue"),
-                         lty.lines = c("solid", "solid"),
-                         lwd.lines = c(1, 1), ...) {
+                         col_lines = c("red", "blue"),
+                         lty_lines = c("solid", "solid"),
+                         lwd_lines = c(1, 1), ...) {
   if (!inherits(obj, "regrans")) {
     stop("obj must be a regrans object.", call. = FALSE)
   }
-  validate_line_styles(col.lines, lty.lines, lwd.lines)
+  validate_line_styles(col_lines, lty_lines, lwd_lines)
   dots <- validate_plot_options(list(...))
 
   plot_data <- data.frame(
     X = obj$data[[obj$variables[["x"]]]],
     Y = obj$data[[obj$variables[["y"]]]]
   )
-  plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = X, y = Y)) +
+  plot <- ggplot2::ggplot(
+    plot_data,
+    ggplot2::aes(x = X, y = Y) # nolint: object_usage_linter.
+  ) +
     ggplot2::geom_point(
       shape = plot_option(dots, "pch", 1),
       colour = plot_option(dots, "col", "black"),
@@ -42,8 +45,8 @@ plot_regrans <- function(obj,
 
   for (side in seq_along(c("left", "right"))) {
     name <- c("left", "right")[[side]]
-    plot <- plot + segment_layer(obj[[name]], col.lines[[side]],
-                                 lty.lines[[side]], lwd.lines[[side]])
+    plot <- plot + segment_layer(obj[[name]], col_lines[[side]],
+                                 lty_lines[[side]], lwd_lines[[side]])
   }
   if ("xlim" %in% names(dots) || "ylim" %in% names(dots)) {
     plot <- plot + ggplot2::coord_cartesian(
@@ -61,8 +64,10 @@ plot_regrans <- function(obj,
 #' @noRd
 validate_line_styles <- function(colours, types, widths) {
   if (!valid_line_styles(colours, types, widths)) {
-    stop("*.lines must have two values; line widths must be positive.",
-         call. = FALSE)
+    stop(
+      "*.lines must have two values; line widths must be positive.",
+      call. = FALSE
+    )
   }
 }
 
@@ -73,7 +78,7 @@ validate_line_styles <- function(colours, types, widths) {
 #' @noRd
 valid_line_styles <- function(colours, types, widths) {
   if (length(colours) != 2L || length(types) != 2L ||
-      length(widths) != 2L || !is.numeric(widths)) {
+        length(widths) != 2L || !is.numeric(widths)) {
     return(FALSE)
   }
   all(is.finite(widths)) && all(widths > 0)
@@ -87,9 +92,9 @@ valid_line_styles <- function(colours, types, widths) {
 validate_plot_options <- function(dots) {
   allowed <- c("pch", "col", "cex", "xlab", "ylab", "main", "xlim", "ylim")
   if (length(dots) && (is.null(names(dots)) ||
-                       !all(nzchar(names(dots))) ||
-                       !all(names(dots) %in% allowed) ||
-                       anyDuplicated(names(dots)))) {
+                         !all(nzchar(names(dots))) ||
+                         !all(names(dots) %in% allowed) ||
+                         anyDuplicated(names(dots)))) {
     stop("Supported plot arguments are: ", toString(allowed),
          call. = FALSE)
   }
@@ -128,6 +133,7 @@ segment_layer <- function(model, colour, line_type, line_width) {
   ggplot2::geom_segment(
     data = line_data,
     mapping = ggplot2::aes(
+      # nolint next: object_usage_linter.
       x = x_start, xend = x_end, y = y_start, yend = y_end
     ),
     inherit.aes = FALSE,

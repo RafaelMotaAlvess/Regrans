@@ -6,16 +6,16 @@
 \usage{
 plot_regrans(
   obj,
-  col.lines = c("red", "blue"),
-  lty.lines = c("solid", "solid"),
-  lwd.lines = c(1, 1),
+  col_lines = c("red", "blue"),
+  lty_lines = c("solid", "solid"),
+  lwd_lines = c(1, 1),
   ...
 )
 }
 \arguments{
 \item{obj}{A \code{regrans} object.}
 
-\item{col.lines, lty.lines, lwd.lines}{Length-two vectors controlling the
+\item{col_lines, lty_lines, lwd_lines}{Length-two vectors controlling the
 colour, line type, and line width of the left and right segments.}
 
 \item{...}{Optional base-plot arguments \code{pch}, \code{col}, \code{cex}, \code{xlab},

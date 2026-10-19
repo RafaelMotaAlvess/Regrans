@@ -1,8 +1,10 @@
 test_that("plot helpers return editable plots with observed line ranges", {
   x <- c(8, 1, 7, 2, 6, 3, 5, 4)
-  fit <- regrans(x, c(17, 2, 15, 4, 13, 6, 11, 8), n.min = 3)
+  fit <- regrans(x, c(17, 2, 15, 4, 13, 6, 11, 8), n_min = 3)
   plot <- plot_regrans(fit, pch = 16, xlab = "Time", ylab = "Value",
-                       col.lines = c("red", "blue"))
+                       col_lines = c("red", "blue"),
+                       lty_lines = c("solid", "dashed"),
+                       lwd_lines = c(1, 2))
   expect_s3_class(plot, "ggplot")
   expect_s3_class(ggplot2::autoplot(fit), "ggplot")
   expect_equal(plot$labels$x, "Time")

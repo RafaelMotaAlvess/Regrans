@@ -7,7 +7,8 @@
 #' @param x A `regrans` object.
 #' @param ... Reserved for the generic; unused.
 #' @return `tidy()` returns one coefficient row per term and segment.
-#'   `glance()` returns one row with the selected split and fit scores.
+#'   `glance()` returns one row with `n_min`, the selected split, and fit
+#'   scores.
 #'   `augment()` returns the original observations with `.segment`,
 #'   `.fitted`, and `.resid` columns in their original order.
 #' @examples
@@ -56,7 +57,7 @@ glance.regrans <- function(x, ...) {
   ]
   tibble::tibble(
     nobs = nrow(x$data),
-    n.min = x$n.min,
+    n_min = x$n_min,
     n_candidates = nrow(x$candidates),
     split_index = x$split$index,
     left_max_x = x$split$left_max_x,
