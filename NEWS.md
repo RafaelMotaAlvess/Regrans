@@ -1,5 +1,8 @@
 # Regrans (development version)
 
+* `regrans()` now uses `n_min` instead of `n.min`, including in its result and
+  the `glance()` output. `plot_regrans()` uses `col_lines`, `lty_lines`, and
+  `lwd_lines`; `summary()` uses `symbolic_cor`.
 * `regrans()` now accepts a two-variable formula and data frame, retains the
   selected split and candidate scores, and keeps fitted values and residuals
   in the original observation order.
