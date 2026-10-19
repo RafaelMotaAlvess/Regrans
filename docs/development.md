@@ -13,7 +13,13 @@ Rscript ci/check-local.R
 
 The script runs `R CMD check --no-manual --as-cran` via `rcmdcheck`, then `goodpractice` with its `rcmdcheck` group disabled. This avoids running the package check twice. `R CMD check` errors and warnings fail the local script; `goodpractice` findings are printed as suggestions, while failure to run the tool fails the script. Pandoc on `PATH` enables its URL-related checks.
 
-The [`R-CMD-check` workflow](../.github/workflows/R-CMD-check.yaml) runs on pushes to branches and on pull requests. It uses the same division of responsibility: `R CMD check` validates the package; `goodpractice` reports complementary quality findings. A green check does not establish statistical correctness, so behavior changes also need focused examples or tests.
+The [`R-CMD-check` workflow](../.github/workflows/R-CMD-check.yaml) runs on pushes to branches and on pull requests. It checks the package with R release and the minimum supported R 4.1 on Ubuntu. `R CMD check` runs the `testthat` suite in both lanes; `goodpractice` reports complementary quality findings in the release lane. Run focused tests while changing behavior:
+
+```bash
+Rscript -e 'testthat::test_local()'
+```
+
+The tests are in `tests/testthat/`, use testthat edition 3, and run again through `R CMD check`. A green check does not by itself prove statistical correctness; keep numerical reference cases in the test suite.
 
 The package repository does not carry its own `renv` lockfile. Contributors can use a normal R user library and the two `ci/` scripts above.
 
@@ -34,7 +40,7 @@ Add user-visible changes to the [`# Regrans (development version)`](../NEWS.md) 
 
 Regrans currently uses GitHub Releases for distribution and keeps R package metadata compatible with a possible future CRAN submission. Release preparation is a separate change after the intended work is on `master`:
 
-1. Review the accumulated development notes and the changes since the last tag. Choose the next version deliberately; the planned first release is `0.1.0`.
+1. Review the accumulated development notes and the changes since the last tag. Choose the next version deliberately.
 2. Finalize the version in `DESCRIPTION` and move the relevant development notes under a heading such as `# Regrans 0.1.0` in `NEWS.md`. Leave a fresh `# Regrans (development version)` section for subsequent work.
 3. Run the local checks and wait for the hosted check to pass on the **exact release commit** on `master`.
 4. Create and push an annotated `vX.Y.Z` tag pointing to that commit. Do not repoint a published tag.
