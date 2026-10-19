@@ -9,7 +9,10 @@ dir.create(lib, recursive = TRUE, showWarnings = FALSE)
 if (!dir.exists(lib)) stop("Could not create R library: ", lib, call. = FALSE)
 .libPaths(c(lib, .libPaths()))
 
-required <- c("rcmdcheck", "goodpractice")
+required <- c(
+    "rcmdcheck", "goodpractice", "testthat", "broom",
+    "generics", "ggplot2", "tibble", "roxygen2", "rmarkdown"
+)
 missing <- required[!vapply(required, requireNamespace, logical(1),
                             quietly = TRUE)]
 if (length(missing)) {
