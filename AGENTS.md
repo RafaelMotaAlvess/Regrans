@@ -14,8 +14,9 @@ current result contains `left` and `right` `lm` objects. The lines are not
 required to meet, and the selected partition is not a continuous breakpoint
 estimate. Preserve this distinction in code, documentation, and examples.
 
-The supported interface is defined by `NAMESPACE`: currently `regrans()`,
-`plot_regrans()`, and the `summary()` method for `regrans` objects.
+The supported interface is defined by `NAMESPACE`: `regrans()`,
+`plot_regrans()`, and the `summary()`, `autoplot()`, `tidy()`, `glance()`,
+and `augment()` methods for `regrans` objects.
 `regranslm()` and `regrans_ancova()` are internal helpers. Do not present
 them as public API without an explicit export and documentation change. Read
 [`docs/architecture.md`](docs/architecture.md) and
@@ -52,10 +53,9 @@ generate it. Preserve unrelated local files and changes.
   `summary()` and `plot_regrans()` stable unless the change explicitly calls
   for a public API change. Update documentation and tests together with any
   such change.
-- `DESCRIPTION` declares `R (>= 3.2.2)`. Code shipped in the package must
-  support that version. Do not introduce the native pipe `|>` or shorthand
-  anonymous functions `\(x)` without deliberately changing and verifying
-  the minimum-R policy.
+- `DESCRIPTION` declares `R (>= 4.1.0)`. Use the native pipe `|>` where it
+  improves interface code, and keep the numerical search explicit. Verify
+  the minimum-R policy when introducing newer language features.
 - Development tools belong in the contributor workflow; do not add a runtime
   dependency solely to run a check or format source.
 
@@ -79,12 +79,27 @@ whole-package formatting diffs.
 - Name an `R/*.R` file after its principal function, or use a concise name
   for a closely related group of functions. Keep file names lowercase where
   practical.
-- Put roxygen documentation beside public functions. Document arguments,
-  return values, and runnable examples. Run `roxygen2::roxygenise()` or
-  `devtools::document()` and review changes to `man/` and `NAMESPACE`.
-  Never edit generated help as the only source of a documentation change.
-- Add focused tests for behavior changes and fixes. If using testthat,
-  follow its `tests/testthat/test-foo.R` convention for `R/foo.R`.
+- Add focused `testthat` tests for behavior changes and fixes, following its
+  `tests/testthat/test-foo.R` convention for `R/foo.R`. Keep independent
+  numerical reference cases for changes to split selection.
+
+### Roxygen documentation gate
+
+Documentation is a hard gate for every change to `R/`. Every top-level
+function must have an adjacent roxygen block that explains its purpose,
+arguments, return value, and any important statistical or compatibility
+constraint. Public functions and S3 methods also need a runnable example and
+`@export`; use `@rdname` when methods share a help topic. Document internal
+helpers in the source with `@noRd`; do not present them as supported public
+API.
+
+Before reporting an `R/` change complete, run `roxygen2::roxygenise()` (or
+`devtools::document()`), inspect the generated `man/` and `NAMESPACE` diff,
+and run `Rscript ci/check-local.R`. Resolve missing documentation, stale
+generated files, and code/documentation mismatches before considering the
+change ready.
+Do not edit generated help as the sole source of a change. Package and dataset
+documentation must likewise be maintained in their roxygen source blocks.
 
 Keep the README focused on what the package does, how to install it, and a
 working example; place deeper explanations in `docs/`. Edit `README.Rmd`,
@@ -113,9 +128,12 @@ once. An `R CMD check` error or warning fails validation; inspect NOTEs.
 Review `goodpractice` findings as quality feedback. Failure to run
 `goodpractice` is a validation failure, even though individual findings are
 reported rather than used as a gate.
+Run `Rscript -e 'testthat::test_local()'` for focused package tests while
+developing; `R CMD check` runs the same suite via `tests/testthat.R`.
 
 The hosted `R-CMD-check` workflow runs on pushes and pull requests with R
-release on Ubuntu. For statistical or other behavior changes, run focused
+release and R 4.1 on Ubuntu; `goodpractice` runs on the release lane. For
+statistical or other behavior changes, run focused
 examples or tests as well. In the pull request, use
 `.github/pull_request_template.md` to explain the change, how to verify it,
 and any relevant NEWS entry. Report the commands run, their results, and
