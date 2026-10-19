@@ -70,9 +70,14 @@ substantially edited R code, including its [syntax](https://style.tidyverse.org/
 reference. Apply style to the code being changed; avoid unrelated,
 whole-package formatting diffs.
 
-- Use descriptive `snake_case` names for new functions and variables;
-  reserve dots in function names for S3 methods. Preserve existing public
-  names.
+- Use descriptive `snake_case` names for functions, arguments, variables,
+  and returned fields; reserve dots in function names for S3 methods. This
+  package is still in development, so prefer a consistent public interface
+  over speculative compatibility. Treat a public rename as
+  a behavior change: update calls, roxygen, generated help, tests, usage
+  guides, and `NEWS.md` together. The `X`/`Y` columns inside returned `lm`
+  models are tied to their formulas; investigate their downstream effects
+  before changing them.
 - Use two-space indentation, spaces around ordinary infix operators, and
   braces for multiline control flow. Aim for lines of at most 80 characters.
   Comments should explain a decision or constraint.
@@ -82,6 +87,14 @@ whole-package formatting diffs.
 - Add focused `testthat` tests for behavior changes and fixes, following its
   `tests/testthat/test-foo.R` convention for `R/foo.R`. Keep independent
   numerical reference cases for changes to split selection.
+- Run `Rscript -e 'stopifnot(length(lintr::lint_package()) == 0L)'` after
+  editing R source, tests, or data-generation scripts. Fix indentation,
+  spacing, and private object names rather than disabling a linter globally.
+  `ggplot2::aes()` references data columns through nonstandard evaluation;
+  `utils::globalVariables()` satisfies `R CMD check` but not necessarily
+  `lintr`. Use a line-specific `# nolint: object_usage_linter.` only for
+  that verified case, never to avoid a straightforward name or spacing fix.
+  Keep `lintr` as a development tool, not an `Imports` dependency.
 
 ### Roxygen documentation gate
 
@@ -128,8 +141,19 @@ once. An `R CMD check` error or warning fails validation; inspect NOTEs.
 Review `goodpractice` findings as quality feedback. Failure to run
 `goodpractice` is a validation failure, even though individual findings are
 reported rather than used as a gate.
+Inspect reported call sites before applying a suggestion mechanically. For
+example, the current `paste0()` findings in `R/zzz.R` refer to the package
+startup message, not to a `stop()` call or a file path.
 Run `Rscript -e 'testthat::test_local()'` for focused package tests while
 developing; `R CMD check` runs the same suite via `tests/testthat.R`.
+
+When a change exposes a recurring mistake, hidden constraint, or failure in
+code, structure, documentation, CI, or release work, fix the underlying issue
+and record a short, actionable lesson in this file. Update the affected
+source-of-truth guide in `docs/` or another maintained document at the same
+time. Describe what to check or do next time and why; avoid session logs and
+duplicating whole guides here. Verify that the new rule matches the code and
+the commands contributors actually run.
 
 The hosted `R-CMD-check` workflow runs on pushes and pull requests with R
 release and R 4.1 on Ubuntu; `goodpractice` runs on the release lane. For

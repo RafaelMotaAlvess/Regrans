@@ -21,6 +21,14 @@ Rscript -e 'testthat::test_local()'
 
 The tests are in `tests/testthat/`, use testthat edition 3, and run again through `R CMD check`. A green check does not by itself prove statistical correctness; keep numerical reference cases in the test suite.
 
+After editing R source, tests, or data-generation code, check the whole package with the default tidyverse-oriented `lintr` rules:
+
+```bash
+Rscript -e 'stopifnot(length(lintr::lint_package()) == 0L)'
+```
+
+Install `lintr` in your development library if needed (`install.packages("lintr")`). Fix names and formatting in the edited code, including public arguments while the package is still in development. Update roxygen, generated help, tests, usage guides, and `NEWS.md` with any public rename. Annotate only the affected line when a lint finding is a verified false positive, such as data-column names inside `ggplot2::aes()`.
+
 The package repository does not carry its own `renv` lockfile. Contributors can use a normal R user library and the two `ci/` scripts above.
 
 ## Keep the README and NEWS current

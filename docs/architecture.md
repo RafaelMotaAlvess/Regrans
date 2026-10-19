@@ -6,7 +6,7 @@ This page describes the package **as implemented now**.
 
 `regrans()` accepts numeric `x` and `y` vectors or a bare two-variable formula
 and data frame. It sorts paired observations by `x`, keeping their original row
-positions, and considers divisions with at least `n.min` observations on each
+positions, and considers divisions with at least `n_min` observations on each
 side. A candidate must fall between **distinct** observed `x` values, and
 each side needs at least two distinct `x` values to estimate a slope.
 
