@@ -2,38 +2,25 @@
 % Please edit documentation in R/summary.regrans.R
 \name{summary.regrans}
 \alias{summary.regrans}
-\title{Summarizing Segmented Linear Regression Fits}
+\title{Summarize both fitted segments}
 \usage{
 \method{summary}{regrans}(object, correlation = FALSE, symbolic.cor = FALSE, ...)
 }
 \arguments{
-\item{object}{an object of class \code{regrans}, usually, a result
-of a call to \code{regrans} function.}
+\item{object}{A \code{regrans} object.}
 
-\item{correlation}{logical; if ‘TRUE’, the correlation matrix of the
-estimated parameters is returned and printed.}
+\item{correlation, symbolic.cor}{Arguments passed to \code{summary.lm()}.}
 
-\item{symbolic.cor}{logical. If ‘TRUE’, print the correlations in a
-symbolic form (see ‘symnum’) rather than as numbers.}
-
-\item{...}{further arguments passed to or from other methods.}
+\item{...}{Further arguments passed to \code{summary.lm()}.}
 }
 \value{
-The function ‘summary.regrans’ computes and returns a list
-    of summaries statistics of both (left and right lm) fitted
-    segmented regression given in ‘object’. For more details see
-    also the help of summary.lm.
+A list with \code{left} and \code{right} \code{summary.lm} objects. Their
+coefficient inference is conditional on the selected partition.
 }
 \description{
-"summary" method for class \code{regrans}.
+Summarize both fitted segments
 }
 \examples{
 data(simdata)
-mod <- regrans(simdata$x, simdata$y)
-summary(mod)
-
-}
-\author{
-Rodrigo Sant'Ana \email{rsantana@univali.br}, Fernando
-    Mayer \email{fernando.mayer@ufpr.br}
+summary(regrans(simdata$x, simdata$y))
 }

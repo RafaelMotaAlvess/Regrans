@@ -4,9 +4,10 @@
 \name{Regrans-package}
 \alias{Regrans}
 \alias{Regrans-package}
-\title{Fits Segmented Linear Regression Models}
+\title{Regrans: Two independent linear segments}
 \description{
-Fits Segmented Linear Regression Models.
+Regrans searches for a division between observed explanatory values and
+fits a separate linear model on each side.
 }
 \seealso{
 Useful links:

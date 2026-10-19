@@ -1,67 +1,101 @@
-##' @title Fits Segmented Linear Regression Models
-##' @name regranslm
-##'
-##' @description Fit segmented linear models
-##' @param x a numeric vector.
-##' @param y a numeric vector.
-##' @param n.min minimum number of points (x,y) to be considered in a
-##'     linear model.
-##' @return a data frame containing the results of each model fitted.
-##' @author Rodrigo Sant'Ana \email{rsantana@@univali.br}, Fernando
-##'     Mayer \email{fernando.mayer@@ufpr.br}
-##'
-regranslm <- function(x, y, n.min = 5) {
-    if(n.min < 3) {
-        stop("n.min must be greater than 2")
-    }
-    if(length(x) != length(y)) {
-        stop("x and y lengths differ")
-    }
-    if(!is.numeric(x) | !is.numeric(y)) {
-        stop("x and y must be numeric")
-    }
-    da <- data.frame(X = x, Y = y)
-    da <- da[order(da$X, da$Y),]
-    nmod <- nrow(da) - (n.min*2)
-    mod <- list()
-    length(mod) <- nmod
-    out1 <- data.frame(i = numeric(nmod), b0 = numeric(nmod),
-                       b1 = numeric(nmod), r.sq = numeric(nmod),
-                       r.sq.adj = numeric(nmod), sq.res = numeric(nmod),
-                       n = numeric(nmod))
-    out2 <- data.frame(i = numeric(nmod), b0 = numeric(nmod),
-                       b1 = numeric(nmod), r.sq = numeric(nmod),
-                       r.sq.adj = numeric(nmod), sq.res = numeric(nmod),
-                       n = numeric(nmod))
-    for(i in 1:(nrow(da) - (n.min*2))) {
-        left <- da[1:(i + (n.min - 1)), ]
-        right <- da[(i+n.min):nrow(da), ]
-        mod[[i]] <- list(left = lm(Y ~ X, data = left),
-                         right = lm(Y ~ X, data = right))
-        ## Left
-        l.mod <- summary(mod[[i]]$left)
-        l.b0 <- l.mod$coefficients[1,1]
-        l.b1 <- l.mod$coefficients[2,1]
-        l.rq <- l.mod$r.squared
-        l.rq.adj <- l.mod$adj.r.squared
-        l.sq.res <- sum(l.mod$residuals^2)
-        l.n <- nrow(left)
-        ## Right
-        r.mod <- summary(mod[[i]]$right)
-        r.b0 <- r.mod$coefficients[1,1]
-        r.b1 <- r.mod$coefficients[2,1]
-        r.rq <- r.mod$r.squared
-        r.rq.adj <- r.mod$adj.r.squared
-        r.sq.res <- sum(r.mod$residuals^2)
-        r.n <- nrow(right)
-        out1[i,] <- c(i, l.b0, l.b1, l.rq, l.rq.adj, l.sq.res, l.n)
-        out2[i,] <- c(i, r.b0, r.b1, r.rq, r.rq.adj, r.sq.res, r.n)
-    }
-    out <- rbind(out1, out2)
-    out <- out[order(out$i),]
-    row.names(out) <- paste0("m", out$i, rep(c("l", "r"), l = nrow(out)))
-    out$i <- NULL
-    final <- list(out = out, mod = mod)
-    class(final) <- "regrans"
-    return(final)
+#' Search admissible divisions between observations
+#'
+#' Fits two independent `lm` models for each candidate and minimizes their
+#' combined RSS. A tie selects the earliest admissible division in sorted
+#' predictor order. No continuity constraint or numerical breakpoint is used.
+#'
+#' @param x,y Validated finite numeric input vectors.
+#' @param n.min Validated minimum observations per side.
+#' @return Selected `left` and `right` models, split bounds, candidate scores,
+#'   and the row permutation used for sorting.
+#' @noRd
+regranslm <- function(x, y, n.min) {
+  sorted_rows <- order(x, seq_along(x))
+  ordered <- data.frame(X = x[sorted_rows], Y = y[sorted_rows])
+  n <- nrow(ordered)
+  split_indices <- admissible_splits(ordered$X, n.min)
+  if (!length(split_indices)) {
+    stop("No admissible split: each side needs n.min observations and ",
+         "at least two distinct x values.", call. = FALSE)
+  }
+
+  models <- lapply(split_indices, function(i) {
+    list(
+      left = stats::lm(Y ~ X, data = ordered[seq_len(i), , drop = FALSE]),
+      right = stats::lm(Y ~ X, data = ordered[seq.int(i + 1L, n), ,
+                                                 drop = FALSE])
+    )
+  })
+  left_rss <- vapply(models, function(model) model_rss(model$left), numeric(1))
+  right_rss <- vapply(models, function(model) model_rss(model$right),
+                      numeric(1))
+  rss <- left_rss + right_rss
+  finite <- is.finite(rss)
+  if (!any(finite)) {
+    stop("No admissible split has a finite residual sum of squares.",
+         call. = FALSE)
+  }
+  split_indices <- split_indices[finite]
+  models <- models[finite]
+  left_rss <- left_rss[finite]
+  right_rss <- right_rss[finite]
+  rss <- rss[finite]
+
+  best <- which.min(rss)
+  index <- split_indices[[best]]
+  list(
+    left = models[[best]]$left,
+    right = models[[best]]$right,
+    split = list(index = index, left_max_x = ordered$X[[index]],
+                 right_min_x = ordered$X[[index + 1L]]),
+    candidates = candidate_table(ordered$X, split_indices,
+                                 left_rss, right_rss),
+    sorted_rows = sorted_rows
+  )
+}
+
+#' Enumerate divisions that can estimate both slopes
+#'
+#' @param x Predictor values sorted in ascending order.
+#' @param n.min Minimum observations on either side.
+#' @return Integer split indices between distinct `x` values, with at least
+#'   two distinct values on each side.
+#' @noRd
+admissible_splits <- function(x, n.min) {
+  n <- length(x)
+  indices <- seq.int(n.min, n - n.min)
+  indices <- indices[x[indices] < x[indices + 1L]]
+  indices[vapply(indices, function(i) {
+    length(unique(x[seq_len(i)])) >= 2L &&
+      length(unique(x[seq.int(i + 1L, n)])) >= 2L
+  }, logical(1))]
+}
+
+#' Calculate a model's residual sum of squares
+#'
+#' @param model A fitted `lm` model.
+#' @return A single numeric RSS value.
+#' @noRd
+model_rss <- function(model) {
+  sum(stats::residuals(model)^2)
+}
+
+#' Record the scores and observed bounds of admissible divisions
+#'
+#' @param x Predictor values sorted in ascending order.
+#' @param split_indices Admissible positions after which to divide `x`.
+#' @param left_rss,right_rss Residual sums of squares for each side.
+#' @return A data frame with counts, observed bounds, and RSS per candidate.
+#' @noRd
+candidate_table <- function(x, split_indices, left_rss, right_rss) {
+  data.frame(
+    split_index = split_indices,
+    left_n = split_indices,
+    right_n = length(x) - split_indices,
+    left_max_x = x[split_indices],
+    right_min_x = x[split_indices + 1L],
+    left_rss = left_rss,
+    right_rss = right_rss,
+    rss = left_rss + right_rss
+  )
 }

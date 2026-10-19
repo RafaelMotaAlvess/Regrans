@@ -7,8 +7,8 @@
 \format{
 a data frame with 50 rows and 2 columns:
 \itemize{
-  \item x: explanatory variable.
-  \item y: response variable.
+\item x: explanatory variable.
+\item y: response variable.
 }
 }
 \description{
