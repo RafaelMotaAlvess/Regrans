@@ -49,6 +49,12 @@ generate it. Preserve unrelated local files and changes.
   Review them as behavior changes and add a reproducible regression example
   or test. A passing package check alone does not establish statistical
   correctness.
+- When comparing Regrans with another R package, identify both versions and
+  verify current capabilities in code, exports, documentation, or an executed
+  example. Recheck comparative tables after an API change: older inventories
+  can miss the formula interface, candidate scores, or tidy methods. Keep
+  proposed additions separate from implemented behavior. Do not infer a
+  speedup from replacing a `for` loop with `lapply()`; measure it.
 - Keep the structure of returned `regrans` objects and the behavior of
   `summary()` and `plot_regrans()` stable unless the change explicitly calls
   for a public API change. Update documentation and tests together with any

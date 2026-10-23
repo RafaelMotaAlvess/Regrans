@@ -34,7 +34,9 @@ requires a prediction policy that has not been chosen.
 `plot_regrans()` and `ggplot2::autoplot()` return editable ggplot2 objects.
 Each fitted line is drawn only over the `x` range used for its model. The
 numeric search still uses base R's `lm`; ggplot2 is only a presentation
-dependency.
+dependency. The search still refits two `lm` models for every admissible
+candidate. Its current `lapply()` implementation has not been benchmarked
+against the earlier loop, so the refactor alone does not establish a speedup.
 
 | Location | Responsibility |
 | --- | --- |
