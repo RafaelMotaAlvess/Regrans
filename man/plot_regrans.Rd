@@ -2,51 +2,34 @@
 % Please edit documentation in R/plot_regrans.R
 \name{plot_regrans}
 \alias{plot_regrans}
-\title{Plot of Segmented Linear Regression for an \code{regrans}
-    Object}
+\title{Plot two independently fitted segments}
 \usage{
 plot_regrans(
   obj,
-  col.lines = c("red", "blue"),
-  lty.lines = c("solid", "solid"),
-  lwd.lines = c(1, 1),
+  col_lines = c("red", "blue"),
+  lty_lines = c("solid", "solid"),
+  lwd_lines = c(1, 1),
   ...
 )
 }
 \arguments{
-\item{obj}{\code{regrans} object, result of \code{regrans} function.}
+\item{obj}{A \code{regrans} object.}
 
-\item{col.lines}{a vector with length 2 containing the names of
-colors that will be drawing the lines of both linear models
-(left and right).}
+\item{col_lines, lty_lines, lwd_lines}{Length-two vectors controlling the
+colour, line type, and line width of the left and right segments.}
 
-\item{lty.lines}{a vector with length 2 containing the names of
-line types that will be drawing the lines of both linear models
-(left and right).}
-
-\item{lwd.lines}{a vector with length 2 containing the names of
-line widths that will be drawing the lines of both linear models
-(left and right).}
-
-\item{...}{further arguments passed to or from other methods to
-plot.}
+\item{...}{Optional base-plot arguments \code{pch}, \code{col}, \code{cex}, \code{xlab},
+\code{ylab}, \code{main}, \code{xlim}, and \code{ylim}. Other arguments are rejected.}
 }
 \value{
-The function 'plot.regrans' will return a plot with both
-    segment regressions models.
+An editable \code{ggplot2} object.
 }
 \description{
-Segmented linear regression plot for visualization of
-    the transition point (or allometric inflection point) identified
-    by interactive regrans routine.
+The lines are drawn only over the \code{x} values used to fit each segment.
+No continuous breakpoint is estimated or displayed.
 }
 \examples{
 data(simdata)
-mod <- regrans(simdata$x, simdata$y)
-plot_regrans(mod)
-
-}
-\author{
-Rodrigo Sant'Ana \email{rsantana@univali.br}, Fernando
-    Mayer \email{fernando.mayer@ufpr.br}
+fit <- regrans(simdata$x, simdata$y)
+plot_regrans(fit, pch = 16)
 }

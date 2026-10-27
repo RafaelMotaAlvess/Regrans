@@ -1,47 +1,76 @@
 # Fit and inspect two linear segments
 
-Regrans is useful when a scatterplot suggests that the relationship between two numeric variables changes across the range of `x`. The current implementation searches for **one split between observed points**, fits a separate line on each side, and chooses the split with the smallest total residual sum of squares.
+Regrans is useful when a scatterplot suggests that the relationship between
+two numeric variables changes across the range of `x`. It chooses **one
+division between observed values**, fits an independent line on each side,
+and minimizes their combined residual sum of squares.
 
-## A small example
+## Fit a model
 
 ```r
 library(Regrans)
 
-x <- 1:20
-y <- ifelse(x <= 10, 2 + x, -15 + 3 * x) + sin(x) / 5
-fit <- regrans(x, y, n.min = 5)
+observations <- data.frame(x = 1:20)
+observations$y <- ifelse(observations$x <= 10,
+                         2 + observations$x,
+                         -15 + 3 * observations$x) +
+  sin(observations$x) / 5
 
+fit <- regrans(y ~ x, data = observations, n_min = 5)
+fit$split
 summary(fit)
 plot_regrans(fit, pch = 16, xlab = "x", ylab = "y")
 ```
 
-`fit$left` and `fit$right` are ordinary `lm` objects. You can use familiar `lm` accessors on either one:
+The vector interface remains available:
+
+```r
+same_fit <- regrans(observations$x, observations$y, n_min = 5)
+```
+
+The formula must contain one bare numeric response and one bare numeric
+predictor, both columns in `data`. Inputs must be finite. `n_min` is an integer
+of at least 3, and each side must contain at least `n_min` observations and
+two distinct predictor values. Observations with the same `x` always stay on
+the same side. An error is returned when no admissible division exists.
+
+## Inspect results
+
+`fit$left` and `fit$right` are ordinary `lm` objects. Their `model$X` ranges
+show the observations used for each segment. `fit$split$left_max_x` and
+`fit$split$right_min_x` bound the selected division; the package does not
+estimate a single real-valued breakpoint. `fit$candidates` lists the RSS for
+each admissible division. `fit$n_min` records the requested minimum segment
+size, also reported by `glance(fit)`.
 
 ```r
 coef(fit$left)
 coef(fit$right)
-range(fit$left$model$X)
-range(fit$right$model$X)
+tidy(fit)       # coefficient table, identified by segment
+glance(fit)     # one-row fit and selected-division summary
+head(augment(fit)) # original rows with .segment, .fitted, .resid
 ```
 
-The two ranges show which observations went into each fit. They describe a boundary **between** observed `x` values; `regrans()` does not return a separate, continuous breakpoint estimate. `summary(fit)` returns a list with summaries named `left` and `right`.
+The tidiers also work through `broom::tidy()`, `broom::glance()`, and
+`broom::augment()` if broom is installed. The coefficient standard errors and
+p-values describe the selected `lm` fits conditionally; they are not a formal
+test of the division or its uncertainty.
 
-The package also contains `simdata`, a 50-row example dataset:
+## Edit the plot
+
+`plot_regrans(fit)` and `ggplot2::autoplot(fit)` return ggplot2 objects. The
+two line segments stop at their respective observed `x` ranges and need not
+touch. You can add ggplot2 layers or themes to the result:
 
 ```r
-data(simdata, package = "Regrans")
-fit <- regrans(simdata$x, simdata$y)
-plot_regrans(fit)
+plot_regrans(fit, col_lines = c("red", "blue")) +
+  ggplot2::theme_minimal()
 ```
 
-`simdata` is a general regression example, not a benchmark with a known breakpoint. Interpret the fitted split in light of the data and your scientific question.
+`plot_regrans()` accepts `col_lines`, `lty_lines`, `lwd_lines`, and common base-plot
+arguments `pch`, `col`, `cex`, `xlab`, `ylab`, `main`, `xlim`, and `ylim`.
+Other base graphics arguments produce an explicit error.
 
-## Current scope
-
-- Inputs are numeric `x` and `y` vectors of equal length. `n.min` must be at least 3; it controls the minimum observations per side. The current search needs more than `2 * n.min` observations to produce candidates.
-- The fit considers one split and two independently fitted straight lines. It does not constrain the lines to meet.
-- The selected object holds the two `lm` fits. It does not provide a confidence interval or a dedicated breakpoint estimate.
-- Missing values are not given an explicit handling policy. Ties in `x` are ordered by `y`, so candidate splits can separate observations with the same `x` value. Prepare and inspect the data before interpreting a split.
-- `regranslm()` and `regrans_ancova()` exist in the source but are not exported as public functions. Public usage examples rely on `regrans()`, `summary()`, and `plot_regrans()`.
-
-For argument details, see `?regrans` and `?plot_regrans` in R. For implementation details, see [Implementation](architecture.md).
+The package includes `simdata` as a general example dataset. It is not a
+benchmark with a known breakpoint. `regranslm()` and `regrans_ancova()`
+remain internal and are not part of the supported public interface.

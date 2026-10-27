@@ -14,10 +14,19 @@ Description: Fits two-segment linear regression models by evaluating candidate
     split points and selecting the split that minimizes the total residual sum
     of squares. Includes plotting and summary helpers for the fitted segments.
 Depends:
-    R (>= 3.2.2)
+    R (>= 4.1.0)
+Imports:
+    generics,
+    ggplot2 (>= 3.4.0),
+    tibble
+Suggests:
+    broom,
+    testthat (>= 3.0.0)
 License: GPL-3
 URL: https://github.com/RafaelMotaAlvess/Regrans
 BugReports: https://github.com/RafaelMotaAlvess/Regrans/issues
 LazyData: true
 Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.1.1
+Config/testthat/edition: 3

@@ -1,10 +1,8 @@
-##' @title Fits Segmented Linear Regression Models
-##'
-##' @description Fits Segmented Linear Regression Models.
-##'
-##' @docType package
-##' @name Regrans-package
-NULL
+#' Regrans: Two independent linear segments
+#'
+#' Regrans searches for a division between observed explanatory values and
+#' fits a separate linear model on each side.
+"_PACKAGE"
 
 ##' Simulated data
 ##'

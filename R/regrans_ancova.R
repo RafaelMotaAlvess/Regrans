@@ -1,20 +1,19 @@
-##' @title Implements an ANCOVA for Parameters Comparisons of Segmented
-##'     Linear Regressions Based on a \code{regrans} Object
-##'
-##' @name regrans_ancova
-##'
-##' @description Parameter comparisons of a segmented linear regression
-##'     model based on an interactive \code{regrans} routine.
-##'
-##' @param obj \code{regrans} object, result of \code{regrans} function.
-##'
-##' @author Rodrigo Sant'Ana \email{rsantana@@univali.br}, Fernando
-##'     Mayer \email{fernando.mayer@@ufpr.br}
+#' Fit an exploratory ANCOVA model for the two selected segments
+#'
+#' This internal helper compares coefficients after the split has already
+#' been selected. It is not part of the supported inferential interface.
+#'
+#' @param obj A fitted `regrans` object.
+#' @return An `lm` model for the interaction of `X` with segment identity,
+#'   returned invisibly.
+#' @noRd
 regrans_ancova <- function(obj) {
-    nleft <- nrow(obj$left$model)
-    nright <- nrow(obj$right$model)
-    da <- data.frame(model = c(rep("left", nleft),
-                               rep("right", nright)),
-                     rbind(obj$left$model, obj$right$model))
-    m1 <- lm(Y ~ X*model, data = da)
+  n_left <- nrow(obj$left$model)
+  n_right <- nrow(obj$right$model)
+  model_data <- data.frame(
+    model = c(rep("left", n_left), rep("right", n_right)),
+    rbind(obj$left$model, obj$right$model)
+  )
+  fit <- stats::lm(Y ~ X * model, data = model_data)
+  invisible(fit)
 }

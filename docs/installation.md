@@ -29,6 +29,8 @@ The macOS extension depends on the R build tooling and can be `.tgz` or another 
 In R, replace the example path with the file you downloaded:
 
 ```r
+# For development builds with the new plotting and tidier interface:
+install.packages(c("generics", "ggplot2", "tibble"))
 install.packages("path/to/Regrans_<version>.tar.gz", repos = NULL, type = "source")
 
 # For a matching Windows or macOS binary:

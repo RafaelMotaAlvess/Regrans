@@ -2,33 +2,38 @@
 % Please edit documentation in R/regrans.R
 \name{regrans}
 \alias{regrans}
-\title{Fit a Two-Segment Linear Regression}
+\title{Fit two independent linear segments}
 \usage{
-regrans(x, y, n.min = 5)
+regrans(x, y, n_min = 5, data = NULL)
 }
 \arguments{
-\item{x}{a numeric vector.}
+\item{x}{A finite numeric explanatory vector, or a formula of the form
+\code{response ~ predictor} with bare column names.}
 
-\item{y}{a numeric vector.}
+\item{y}{A finite numeric response vector when \code{x} is a vector.}
 
-\item{n.min}{minimum number of points (x,y) to be considered in a
-linear model.}
+\item{n_min}{Minimum number of observations on each side (at least 3).}
+
+\item{data}{A data frame containing the columns in \code{x} when \code{x} is a
+formula.}
 }
 \value{
-An object of class \code{regrans}, a list containing the fitted
-    \code{lm} models named \code{left} and \code{right}.
+An object of class \code{regrans}. \code{left} and \code{right} are ordinary
+\code{lm} objects. \code{split} gives the last observed \code{x} on the left and the
+first observed \code{x} on the right; \code{candidates} records the admissible
+partitions and their residual sums of squares. \code{data}, \code{segment},
+\code{fitted_values}, and \code{residual_values} retain the original row order.
 }
 \description{
-Fit two independent linear models after selecting the split
-    with the smallest combined residual sum of squares.
+\code{regrans()} orders observations by the explanatory variable and chooses
+the admissible partition with the smallest combined residual sum of
+squares. The two fitted lines are independent and need not meet. The
+selected split is an interval between observed values, not an estimated
+continuous breakpoint.
 }
 \examples{
 data(simdata)
-fit <- regrans(simdata$x, simdata$y)
+fit <- regrans(y ~ x, data = simdata)
 summary(fit)
-
-}
-\author{
-Rodrigo Sant'Ana \email{rsantana@univali.br}, Fernando
-    Mayer \email{fernando.mayer@ufpr.br}
+fit$split
 }
