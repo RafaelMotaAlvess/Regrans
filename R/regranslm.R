@@ -2,12 +2,14 @@
 #'
 #' Fits two independent `lm` models for each candidate and minimizes their
 #' combined RSS. A tie selects the earliest admissible division in sorted
-#' predictor order. No continuity constraint or numerical breakpoint is used.
+#' predictor order. The selected partition is refitted as an equivalent
+#' interaction model for the common result interface. No numeric breakpoint
+#' is estimated.
 #'
 #' @param x,y Validated finite numeric input vectors.
 #' @param n_min Validated minimum observations per side.
-#' @return Selected `left` and `right` models, split bounds, candidate scores,
-#'   and the row permutation used for sorting.
+#' @return An interaction `lm`, interval location, candidate scores, and the
+#'   row permutation used for sorting.
 #' @noRd
 regranslm <- function(x, y, n_min) {
   sorted_rows <- order(x, seq_along(x))
@@ -19,6 +21,38 @@ regranslm <- function(x, y, n_min) {
          "at least two distinct x values.", call. = FALSE)
   }
 
+  scores <- score_independent_splits(ordered, split_indices)
+  split_indices <- scores$split_indices
+  rss <- scores$left_rss + scores$right_rss
+  best <- which.min(rss)
+  index <- split_indices[[best]]
+  ordered$segment <- factor(
+    rep(c("left", "right"), c(index, n - index)),
+    levels = c("left", "right")
+  )
+  model_fit <- stats::lm(Y ~ X * segment, data = ordered)
+  list(
+    model = "discontinuous",
+    model_fit = model_fit,
+    location = list(status = "interval", estimate = NA_real_,
+                    split_index = index,
+                    left_max_x = ordered$X[[index]],
+                    right_min_x = ordered$X[[index + 1L]]),
+    candidates = candidate_table(ordered$X, split_indices,
+                                 scores$left_rss, scores$right_rss),
+    sorted_rows = sorted_rows,
+    search = list(method = "exhaustive", evaluations = length(split_indices))
+  )
+}
+
+#' Score independent line fits at every candidate division
+#'
+#' @param ordered Data frame sorted by predictor with `X` and `Y` columns.
+#' @param split_indices Admissible positions after which to divide `X`.
+#' @return Finite candidate indices and separate residual sums of squares.
+#' @noRd
+score_independent_splits <- function(ordered, split_indices) {
+  n <- nrow(ordered)
   models <- lapply(split_indices, function(i) {
     list(
       left = stats::lm(Y ~ X, data = ordered[seq_len(i), , drop = FALSE]),
@@ -35,23 +69,8 @@ regranslm <- function(x, y, n_min) {
     stop("No admissible split has a finite residual sum of squares.",
          call. = FALSE)
   }
-  split_indices <- split_indices[finite]
-  models <- models[finite]
-  left_rss <- left_rss[finite]
-  right_rss <- right_rss[finite]
-  rss <- rss[finite]
-
-  best <- which.min(rss)
-  index <- split_indices[[best]]
-  list(
-    left = models[[best]]$left,
-    right = models[[best]]$right,
-    split = list(index = index, left_max_x = ordered$X[[index]],
-                 right_min_x = ordered$X[[index + 1L]]),
-    candidates = candidate_table(ordered$X, split_indices,
-                                 left_rss, right_rss),
-    sorted_rows = sorted_rows
-  )
+  list(split_indices = split_indices[finite],
+       left_rss = left_rss[finite], right_rss = right_rss[finite])
 }
 
 #' Enumerate divisions that can estimate both slopes
@@ -94,6 +113,7 @@ candidate_table <- function(x, split_indices, left_rss, right_rss) {
     right_n = length(x) - split_indices,
     left_max_x = x[split_indices],
     right_min_x = x[split_indices + 1L],
+    estimate = rep(NA_real_, length(split_indices)),
     left_rss = left_rss,
     right_rss = right_rss,
     rss = left_rss + right_rss

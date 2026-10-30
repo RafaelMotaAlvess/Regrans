@@ -1,5 +1,15 @@
 # Regrans (development version)
 
+* `regrans()` now accepts `model = "continuous"` to estimate one breakpoint
+  where the fitted lines meet. The default `"discontinuous"` model still
+  permits a jump. Both modes use a common result with `model_fit`, `segments`,
+  and `location`, replacing the development fields `left`, `right`, and
+  `split`. A numerically flat continuous profile reports the breakpoint as
+  unidentified.
+* `summary()`, `tidy()`, `glance()`, `augment()`, and `plot_regrans()` now
+  describe both model types. Coefficient statistics remain conditional on
+  the selected transition and do not test for a break.
+
 * `regrans()` now uses `n_min` instead of `n.min`, including in its result and
   the `glance()` output. `plot_regrans()` uses `col_lines`, `lty_lines`, and
   `lwd_lines`; `summary()` uses `symbolic_cor`.

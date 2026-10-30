@@ -24,16 +24,16 @@
 defined by this interface.}
 }
 \value{
-\code{tidy()} returns one coefficient row per term and segment.
-\code{glance()} returns one row with \code{n_min}, the selected split, and fit
-scores.
+\code{tidy()} returns intercept and slope rows per segment, or overall
+coefficients when a continuous break is numerically unidentified.
+\code{glance()} returns one row with model, location, and fit scores.
 \code{augment()} returns the original observations with \code{.segment},
 \code{.fitted}, and \code{.resid} columns in their original order.
 }
 \description{
-These methods describe the selected pair of models. Coefficient standard
-errors and p-values are conditional on the selected partition; they do
-not measure uncertainty about the split.
+These methods describe the selected model. Coefficient standard errors
+and p-values are conditional on the selected transition; they do not
+measure uncertainty about its location or test whether it exists.
 }
 \examples{
 data(simdata)

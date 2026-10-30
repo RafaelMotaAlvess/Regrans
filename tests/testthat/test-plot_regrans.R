@@ -12,9 +12,28 @@ test_that("plot helpers return editable plots with observed line ranges", {
 
   built <- ggplot2::ggplot_build(plot)
   expect_length(built$data, 3L)
-  expect_equal(built$data[[2L]]$x, min(fit$left$model$X))
-  expect_equal(built$data[[2L]]$xend, max(fit$left$model$X))
-  expect_equal(built$data[[3L]]$x, min(fit$right$model$X))
-  expect_equal(built$data[[3L]]$xend, max(fit$right$model$X))
+  expect_equal(built$data[[2L]]$x, min(x[fit$segment == "left"]))
+  expect_equal(built$data[[2L]]$xend, max(x[fit$segment == "left"]))
+  expect_equal(built$data[[3L]]$x, min(x[fit$segment == "right"]))
+  expect_equal(built$data[[3L]]$xend, max(x[fit$segment == "right"]))
   expect_error(plot_regrans(fit, las = 2), "Supported plot arguments")
+})
+
+test_that("continuous plot lines meet at the estimated breakpoint", {
+  x <- 1:20
+  y <- 2 + x + 3 * pmax(0, x - 5.5)
+  fit <- regrans(x, y, model = "continuous")
+  built <- ggplot2::ggplot_build(plot_regrans(fit))
+
+  expect_length(built$data, 3L)
+  expect_equal(built$data[[2L]]$xend, fit$location$estimate)
+  expect_equal(built$data[[3L]]$x, fit$location$estimate)
+  expect_equal(built$data[[2L]]$yend, built$data[[3L]]$y,
+               tolerance = 1e-7)
+})
+
+test_that("unidentified continuous fit draws one line", {
+  fit <- regrans(1:12, 2 + 3 * (1:12), model = "continuous")
+  built <- ggplot2::ggplot_build(plot_regrans(fit))
+  expect_length(built$data, 2L)
 })

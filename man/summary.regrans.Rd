@@ -2,7 +2,7 @@
 % Please edit documentation in R/summary.regrans.R
 \name{summary.regrans}
 \alias{summary.regrans}
-\title{Summarize both fitted segments}
+\title{Summarize a segmented regression fit}
 \usage{
 \method{summary}{regrans}(object, correlation = FALSE, symbolic_cor = FALSE, ...)
 }
@@ -14,11 +14,13 @@
 \item{...}{Further arguments passed to \code{summary.lm()}.}
 }
 \value{
-A list with \code{left} and \code{right} \code{summary.lm} objects. Their
-coefficient inference is conditional on the selected partition.
+\code{summary()} returns a \code{summary.regrans} object with model type,
+location, segment coefficients, RSS, and the underlying \code{summary.lm}.
 }
 \description{
-Summarize both fitted segments
+The displayed coefficient statistics are conditional on the selected
+transition. They do not account for searching its location and do not
+constitute a test for a break.
 }
 \examples{
 data(simdata)

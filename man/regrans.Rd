@@ -2,9 +2,9 @@
 % Please edit documentation in R/regrans.R
 \name{regrans}
 \alias{regrans}
-\title{Fit two independent linear segments}
+\title{Fit a segmented linear regression with one transition}
 \usage{
-regrans(x, y, n_min = 5, data = NULL)
+regrans(x, y, n_min = 5, data = NULL, model = c("discontinuous", "continuous"))
 }
 \arguments{
 \item{x}{A finite numeric explanatory vector, or a formula of the form
@@ -16,24 +16,32 @@ regrans(x, y, n_min = 5, data = NULL)
 
 \item{data}{A data frame containing the columns in \code{x} when \code{x} is a
 formula.}
+
+\item{model}{Either \code{"discontinuous"} (the default) or \code{"continuous"}.}
 }
 \value{
-An object of class \code{regrans}. \code{left} and \code{right} are ordinary
-\code{lm} objects. \code{split} gives the last observed \code{x} on the left and the
-first observed \code{x} on the right; \code{candidates} records the admissible
-partitions and their residual sums of squares. \code{data}, \code{segment},
-\code{fitted_values}, and \code{residual_values} retain the original row order.
+An object of class \code{regrans}. \code{model_fit} is an \code{lm} object;
+\code{segments} gives its fitted lines. \code{location} contains an \code{estimate}
+only for an identified continuous break. Its observed bounds identify
+the selected gap, not a confidence interval. \code{candidates} records the
+admissible gaps and RSS values. \code{data}, \code{segment}, \code{fitted_values}, and
+\code{residual_values} retain the original row order. A numerically flat
+continuous RSS profile returns \code{location$status = "unidentified"},
+\code{estimate = NA}, and an ordinary linear \code{model_fit}.
 }
 \description{
-\code{regrans()} orders observations by the explanatory variable and chooses
-the admissible partition with the smallest combined residual sum of
-squares. The two fitted lines are independent and need not meet. The
-selected split is an interval between observed values, not an estimated
-continuous breakpoint.
+\code{regrans()} orders observations by the explanatory variable. The default
+\code{"discontinuous"} model chooses the admissible partition with the smallest
+combined residual sum of squares (RSS); its two lines need not meet and the
+location is an interval between observations. The \code{"continuous"} model
+minimizes profiled RSS for a hinge regression and estimates a numeric
+breakpoint. Neither mode tests whether a break exists.
 }
 \examples{
 data(simdata)
 fit <- regrans(y ~ x, data = simdata)
 summary(fit)
-fit$split
+fit$location
+continuous_fit <- regrans(y ~ x, data = simdata, model = "continuous")
+glance(continuous_fit)
 }

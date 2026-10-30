@@ -1,11 +1,13 @@
-#' Plot two independently fitted segments
+#' Plot a segmented regression fit
 #'
-#' The lines are drawn only over the `x` values used to fit each segment.
-#' No continuous breakpoint is estimated or displayed.
+#' A discontinuous fit draws each line over its observed `x` range. A
+#' continuous fit joins the lines at the estimated breakpoint. When the
+#' breakpoint is unidentified, the overall fitted line is shown.
 #'
 #' @param obj A `regrans` object.
 #' @param col_lines,lty_lines,lwd_lines Length-two vectors controlling the
-#'   colour, line type, and line width of the left and right segments.
+#'   colour, line type, and line width of the left and right segments. Only
+#'   the first value is used for an unidentified fit.
 #' @param ... Optional base-plot arguments `pch`, `col`, `cex`, `xlab`,
 #'   `ylab`, `main`, `xlim`, and `ylim`. Other arguments are rejected.
 #' @return An editable `ggplot2` object.
@@ -43,9 +45,9 @@ plot_regrans <- function(obj,
       title = plot_option(dots, "main", NULL)
     )
 
-  for (side in seq_along(c("left", "right"))) {
-    name <- c("left", "right")[[side]]
-    plot <- plot + segment_layer(obj[[name]], col_lines[[side]],
+  sides <- if (obj$location$status == "unidentified") 1L else 1:2
+  for (side in sides) {
+    plot <- plot + segment_layer(obj, side, col_lines[[side]],
                                  lty_lines[[side]], lwd_lines[[side]])
   }
   if ("xlim" %in% names(dots) || "ylim" %in% names(dots)) {
@@ -112,23 +114,40 @@ plot_option <- function(dots, name, default) {
   if (name %in% names(dots)) dots[[name]] else default
 }
 
-#' Draw one fitted segment over its observed predictor range
+#' Draw one fitted segment over its appropriate predictor range
 #'
-#' @param model One selected `lm` model.
+#' @param fit A selected `regrans` fit.
+#' @param side Segment number, left or right.
 #' @param colour,line_type,line_width Segment line styling.
-#' @return A ggplot2 segment layer with endpoints at observed `x` bounds.
+#' @return A ggplot2 segment layer with fitted endpoints.
 #' @noRd
-segment_layer <- function(model, colour, line_type, line_width) {
-  endpoints <- range(model$model$X)
+segment_layer <- function(fit, side, colour, line_type, line_width) {
+  x <- fit$data[[fit$variables[["x"]]]]
+  if (fit$location$status == "unidentified") {
+    endpoints <- range(x)
+  } else if (fit$model == "continuous") {
+    endpoints <- if (side == 1L) {
+      c(min(x), fit$location$estimate)
+    } else {
+      c(fit$location$estimate, max(x))
+    }
+  } else {
+    endpoints <- range(x[fit$segment == c("left", "right")[[side]]])
+  }
+  coefficients <- fit$segments
+  segment <- if (fit$location$status == "unidentified") {
+    "overall"
+  } else {
+    c("left", "right")[[side]]
+  }
+  terms <- coefficients[coefficients$segment == segment, ]
+  intercept <- terms$estimate[terms$term == "(Intercept)"]
+  slope <- terms$estimate[terms$term == "X"]
   line_data <- data.frame(
     x_start = endpoints[[1L]],
     x_end = endpoints[[2L]],
-    y_start = stats::predict(
-      model, newdata = data.frame(X = endpoints[[1L]])
-    ),
-    y_end = stats::predict(
-      model, newdata = data.frame(X = endpoints[[2L]])
-    )
+    y_start = intercept + slope * endpoints[[1L]],
+    y_end = intercept + slope * endpoints[[2L]]
   )
   ggplot2::geom_segment(
     data = line_data,
