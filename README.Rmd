@@ -18,7 +18,7 @@ output:
 
 ## Overview
 
-Regrans helps you explore data whose relationship changes across the range of an explanatory variable. It fits two independent linear segments and selects the division between observed values with the smallest combined residual sum of squares. You can inspect each line and edit the resulting plot.
+Regrans helps you explore data whose relationship changes across the range of an explanatory variable. Choose two independent lines that may jump, or two lines that meet at an estimated breakpoint. Both options search for one transition by minimizing residual sum of squares. You can inspect the fitted lines and edit the resulting plot.
 
 ## Installation
 
@@ -43,17 +43,19 @@ observations$y <- ifelse(observations$x <= 10,
   sin(observations$x) / 5
 
 fit <- regrans(y ~ x, data = observations)
-range(fit$left$model$X)   # observations assigned to the first line
-#> [1]  1 10
-range(fit$right$model$X)  # observations assigned to the second line
-#> [1] 11 20
-fit$split                 # boundary between observed x values
-tidy(fit)                 # coefficients for each segment
-glance(fit)               # selected split and fit score
+fit$location               # selected interval between observed x values
+fit$segments               # intercept and slope of each line
+tidy(fit)                  # coefficients with conditional statistics
+glance(fit)                # model, location, and fit score
 plot_regrans(fit, pch = 16) # editable ggplot2 graphic
+
+continuous_fit <- regrans(y ~ x, data = observations,
+                          model = "continuous")
+continuous_fit$location$estimate
+plot_regrans(continuous_fit)
 ```
 
-`fit` contains the `left` and `right` linear models. The lines are fitted independently, so they need not meet at the split. `augment(fit)` adds fitted values, residuals, and segment labels to the original rows. See the [usage guide](docs/usage.md) for data requirements and interpretation.
+The default `"discontinuous"` fit permits a jump and reports an interval, not a numeric breakpoint. The `"continuous"` fit joins the lines at an estimated point. If the continuous profile is numerically flat, `location$status` is `"unidentified"` and a single linear fit is returned. `augment(fit)` adds fitted values, residuals, and segment labels to the original rows. See the [usage guide](docs/usage.md) for data requirements and interpretation.
 
 ## Documentation
 
