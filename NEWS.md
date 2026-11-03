@@ -1,5 +1,12 @@
 # Regrans (development version)
 
+* `test_slope_change()` now tests one continuous slope change against a straight line,
+  using a full-search parametric bootstrap by default or a conservative
+  Davies upper bound on an admissible grid. `confint()` returns every component
+  of an approximate profile likelihood confidence region for an identified
+  continuous breakpoint, and `plot_break_profile()` visualizes it. These
+  methods require fixed predictor values and independent normal errors with
+  constant variance; they do not apply to discontinuous fits.
 * `regrans()` now includes a single-line `reference_fit` for comparison with
   the selected model. `summary()` and `glance()` report RSS, training RMSE,
   and R-squared for both fits; these measures are not a break test.
