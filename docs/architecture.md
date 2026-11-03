@@ -22,11 +22,14 @@ For `model = "continuous"`, `continuous_regrans()` fits the hinge equation
 `Y = beta0 + beta1 * X + delta * max(0, X - psi)` at a candidate breakpoint
 `psi`. It profiles the coefficients with `lm.fit()` and numerically minimizes
 RSS within every admissible observed-`x` gap. A gap is split at an internal
-RSS maximum before bounded Brent searches, so the whole range is not
-assumed unimodal. The best `psi` is refitted in original units as an `lm`.
-The recorded search tolerance scales with the observed `x` range. A
-numerically flat profile returns an ordinary linear fit and marks the
-breakpoint as unidentified.
+RSS maximum before bounded golden-section refinement, so the whole range is
+not assumed unimodal. On scaled `x`, the refinement stops when the bracket
+width is at most `max(min(1e-8, subinterval_width / 100), 16 * machine_epsilon)`.
+It raises an error if the RSS becomes non-finite, machine precision prevents
+the required refinement, or 128 iterations do not meet the stopping rule.
+The best `psi` is refitted in original units as an `lm`. A numerically flat
+profile returns an ordinary linear fit and marks the breakpoint as
+unidentified; this is distinct from numerical convergence of the search.
 
 Neither model tests for the presence of a break. The observed gap bounds are
 not a confidence interval. Coefficient standard errors and p-values are
@@ -36,20 +39,32 @@ conditional on the selected location and omit search uncertainty.
 
 The result stores the training data, segment membership, fitted values, and
 residuals in the **original observation order**. `model_fit` holds the selected
-`lm`; `segments` holds line intercepts and slopes. `location` records its
-status, interval bounds, and a numeric estimate only for an identified
-continuous break. `summary()` describes this common result. `tidy()`,
+`lm`; `reference_fit` holds a single-line `lm(Y ~ X)` on the same observations
+in their original order. `segments` holds line intercepts and slopes.
+`location` records its status, interval bounds, and a numeric estimate for an
+identified continuous break. `search` records the termination reason and
+numerical
+convergence, which is `"not_applicable"` for the exhaustive discontinuous
+search and `"converged"` for a completed continuous refinement. Continuous
+`candidates` also records iterations, evaluations, and achieved bracket width
+per gap. `summary()` describes this common result. `tidy()`,
 `glance()`, and `augment()` provide tibble
 outputs through S3 methods implemented in Regrans. `augment()` currently
 supports training data only: assigning an unseen `x` to a side inside the gap
 requires a prediction policy that has not been chosen.
 
+`glance()` and `summary()` report RSS, `sqrt(RSS / n)` as training RMSE, and
+`1 - RSS / TSS` as training R-squared for both selected and reference models.
+R-squared is `NA` for a constant response. These are descriptive, in-sample
+measures; their difference is not a test for a break.
+
 `plot_regrans()` and `ggplot2::autoplot()` return editable ggplot2 objects.
 Discontinuous lines are drawn over their respective observed ranges;
 continuous lines meet at the estimated breakpoint. ggplot2 is a presentation
 dependency. The discontinuous search refits two `lm` models per candidate;
-the continuous search uses base R's `lm.fit()` and `optimize()`. Neither
-implementation has a demonstrated speedup over the earlier package.
+the continuous search uses base R's `lm.fit()` and explicit golden-section
+refinement. Neither implementation has a demonstrated speedup over the earlier
+package.
 
 | Location | Responsibility |
 | --- | --- |

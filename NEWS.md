@@ -1,5 +1,13 @@
 # Regrans (development version)
 
+* `regrans()` now includes a single-line `reference_fit` for comparison with
+  the selected model. `summary()` and `glance()` report RSS, training RMSE,
+  and R-squared for both fits; these measures are not a break test.
+* Continuous `regrans()` fits now report convergence from an explicit
+  bracket-width stopping rule, with per-gap iteration diagnostics. A numeric
+  search failure stops the fit. Discontinuous fits report that exhaustive
+  search completed and that numerical convergence does not apply.
+
 * `regrans()` now accepts `model = "continuous"` to estimate one breakpoint
   where the fitted lines meet. The default `"discontinuous"` model still
   permits a jump. Both modes use a common result with `model_fit`, `segments`,

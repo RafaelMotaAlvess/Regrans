@@ -51,10 +51,19 @@ there. The observed bounds show which gap contains that estimate. They are
 not a confidence interval.
 
 `fit$model_fit` is an ordinary `lm` object for the selected model;
-`fit$segments` gives each line's intercept and slope. `fit$candidates` lists
-the RSS for each admissible division and, for a continuous fit, its refined
-breakpoint estimate. `fit$search` records the search method and evaluation
-count. `fit$n_min` records the minimum segment size.
+`fit$reference_fit` is the single-line `lm` fit on the same observations,
+retained in their original order. `fit$segments` gives each line's intercept
+and slope. `fit$candidates` lists the RSS for each admissible division and,
+for a continuous fit, its refined
+breakpoint estimate, iteration count, evaluation count, and achieved bracket
+width. `fit$search` records the search method, termination reason, convergence
+state, and evaluation count. `fit$n_min` records the minimum segment size.
+The continuous search refines each admissible gap until its numerical bracket
+meets a scaled tolerance; a numerical failure stops the fit with an error.
+The discontinuous search evaluates every admissible split and has no numerical
+convergence criterion. Its `search$convergence` is `"not_applicable"`.
+Numerical convergence does not mean that a break exists: a straight-line
+example may have a converged search and `location$status = "unidentified"`.
 
 If you used the development interface with `fit$left`, `fit$right`, or
 `fit$split`, read `fit$segments` for line coefficients and `fit$location` for
@@ -62,11 +71,18 @@ the transition. Use `fit$model_fit` for the selected `lm`.
 
 ```r
 coef(fit$model_fit)
+coef(fit$reference_fit)
 fit$segments
 tidy(fit)       # coefficient table, identified by segment
-glance(fit)     # one-row model, location, and RSS summary
+glance(fit)     # location, convergence, and fit measures
 head(augment(fit)) # original rows with .segment, .fitted, .resid
 ```
+
+`glance()` and `summary()` report RSS, RMSE (`sqrt(RSS / n)`), and R-squared
+for the selected and linear reference fits. R-squared is `NA` when the
+response is constant. These measures describe training data and do not
+provide a formal test for a break. A lower RSS is expected from a more
+flexible fitted model and does not establish that the change is real.
 
 The tidiers also work through `broom::tidy()`, `broom::glance()`, and
 `broom::augment()` if broom is installed. The coefficient standard errors and

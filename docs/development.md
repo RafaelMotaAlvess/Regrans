@@ -31,6 +31,29 @@ Install `lintr` in your development library if needed (`install.packages("lintr"
 
 The package repository does not carry its own `renv` lockfile. Contributors can use a normal R user library and the two `ci/` scripts above.
 
+## Explore fits in Positron
+
+Open the package root in Positron, start an R console, and run:
+
+```r
+# install.packages("pkgload") # only if it is missing
+source("scripts/explore-models.R")
+```
+
+The script loads the current source with `pkgload::load_all()`, so there is no
+need to install the package after every edit. It creates reproducible data
+with a known continuous breakpoint, a known jump, and an exact straight line.
+It also fits the `cars` dataset bundled with R. The script prints the selected
+locations and opens the plots in Positron's plot history. Use the arrows in the
+Plots pane to compare them, or inspect the named `*_fit`, `*_data`, and
+`*_plot` objects in the R console.
+
+The synthetic cases have known answers: the continuous breakpoint is 18.5,
+the jump lies between 20 and 21, and the straight line should report
+`status = "unidentified"`. The `cars` fit is exploratory: its estimated
+location does not establish that a break exists. After changing package
+source, rerun `source("scripts/explore-models.R")` to load the new code.
+
 ## Keep the README and NEWS current
 
 [`README.Rmd`](../README.Rmd) is the editable source; [`README.md`](../README.md) is generated for GitHub. Edit the Rmd, then regenerate the Markdown before committing:

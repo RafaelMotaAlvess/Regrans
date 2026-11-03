@@ -38,8 +38,9 @@ observations$y <- ifelse(observations$x <= 10,
 fit <- regrans(y ~ x, data = observations)
 fit$location               # selected interval between observed x values
 fit$segments               # intercept and slope of each line
+fit$reference_fit          # single-line lm on the same observations
 tidy(fit)                  # coefficients with conditional statistics
-glance(fit)                # model, location, and fit score
+glance(fit)                # location, search state, and fit measures
 plot_regrans(fit, pch = 16) # editable ggplot2 graphic
 
 continuous_fit <- regrans(y ~ x, data = observations,
