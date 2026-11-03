@@ -29,6 +29,9 @@ test_that("a known two-line example recovers both fitted segments", {
   expect_true(is.na(fit$location$estimate))
   expect_equal(fit$segments$estimate, c(2, 1, 100, 3))
   expect_equal(glance(fit)$rss, 0, tolerance = 1e-20)
+  expect_identical(fit$search$termination, "exhaustive_complete")
+  expect_identical(fit$search$convergence, "not_applicable")
+  expect_true(is.na(fit$search$iterations))
 })
 
 test_that("the selected partition minimizes independent two-line RSS", {
@@ -115,6 +118,16 @@ test_that("continuous fit recovers a known breakpoint between observations", {
                tolerance = 1e-5)
   expect_equal(fit$fitted_values, y, tolerance = 1e-5)
   expect_lt(glance(fit)$rss, 1e-8)
+  expect_identical(fit$search$termination, "tolerance_reached")
+  expect_identical(fit$search$convergence, "converged")
+  expect_gt(fit$search$iterations, 0L)
+  expect_equal(fit$search$iterations, sum(fit$candidates$iterations))
+  expect_true(all(fit$candidates$convergence == "converged"))
+  expect_true(all(fit$candidates$tolerance <=
+                    1e-8 * diff(range(x)) + 1e-12))
+  printed <- capture.output(print(fit))
+  expect_true(any(grepl("Continuous search converged", printed,
+                        fixed = TRUE)))
 })
 
 test_that("continuous search refines the breakpoint beyond observed x", {
@@ -132,6 +145,8 @@ test_that("continuous search refines the breakpoint beyond observed x", {
   expect_lt(fit$location$estimate, 9)
   expect_lte(glance(fit)$rss, min(reference_rss) + 1e-6)
   expect_gt(fit$search$evaluations, nrow(fit$candidates))
+  expect_equal(fit$search$evaluations,
+               sum(fit$candidates$evaluations))
 })
 
 test_that("a flat continuous profile reports no identified breakpoint", {
@@ -145,6 +160,19 @@ test_that("a flat continuous profile reports no identified breakpoint", {
   expect_equal(fit$segments$estimate, c(2, 3), tolerance = 1e-10)
   expect_true(all(fit$segment == "overall"))
   expect_equal(fit$fitted_values, y, tolerance = 1e-10)
+  expect_identical(fit$search$convergence, "converged")
+  expect_equal(sum(residuals(fit$reference_fit)^2), 0,
+               tolerance = 1e-20)
+})
+
+test_that("continuous refinement rejects non-finite profile scores", {
+  invalid_profile <- function(point) {
+    list(rss = Inf)
+  }
+  expect_error(
+    Regrans:::refine_continuous_interval(invalid_profile, 0, 1),
+    "non-finite RSS"
+  )
 })
 
 test_that("both modes keep repeated predictor values in one segment", {
@@ -173,4 +201,8 @@ test_that("discontinuous mode fits a jump that continuous mode cannot", {
   expect_gt(glance(joined_fit)$rss, 1)
   expect_true(is.na(jump_fit$location$estimate))
   expect_true(is.finite(joined_fit$location$estimate))
+  noisy_fit <- regrans(x, y + sin(x) / 10, model = "discontinuous")
+  printed <- capture.output(print(noisy_fit))
+  expect_true(any(grepl("Exhaustive search completed", printed,
+                        fixed = TRUE)))
 })

@@ -16,6 +16,23 @@ test_that("tidy and glance describe both fits and the selected score", {
   expect_identical(overview$left_max_x, fit$location$left_max_x)
   expect_identical(overview$right_min_x, fit$location$right_min_x)
   expect_identical(overview$status, "interval")
+  expect_identical(overview$convergence, "not_applicable")
+  expect_s3_class(fit$reference_fit, "lm")
+  reference <- lm(y ~ x, data = fit$data)
+  expect_equal(unname(coef(fit$reference_fit)),
+               unname(coef(reference)))
+  expect_equal(residuals(fit$reference_fit), residuals(reference))
+  expect_equal(overview$reference_rss, sum(residuals(reference)^2))
+  expect_equal(overview$reference_rmse,
+               sqrt(sum(residuals(reference)^2) / nrow(fit$data)))
+  expect_equal(overview$reference_r_squared,
+               summary(reference)$r.squared)
+  expect_equal(overview$rmse, sqrt(overview$rss / nrow(fit$data)))
+  expect_equal(overview$r_squared,
+               1 - overview$rss / sum((fit$data$y - mean(fit$data$y))^2))
+  fit_summary <- summary(fit)
+  expect_equal(fit_summary$reference_rss, overview$reference_rss)
+  expect_equal(fit_summary$rmse, overview$rmse)
 })
 
 test_that("augment returns fitted values in the original order", {
@@ -56,6 +73,15 @@ test_that("continuous tidiers preserve row order and expose the estimate", {
   expect_equal(coefficients$estimate, fit$segments$estimate)
   expect_identical(overview$status, "identified")
   expect_equal(overview$breakpoint, fit$location$estimate)
+  expect_identical(overview$convergence, "converged")
   expect_identical(augmented$x, data$x)
   expect_equal(augmented$.fitted + augmented$.resid, data$y)
+})
+
+test_that("R-squared is undefined for a constant response", {
+  fit <- regrans(1:8, rep(4, 8), n_min = 3)
+  overview <- glance(fit)
+  expect_true(is.na(overview$r_squared))
+  expect_true(is.na(overview$reference_r_squared))
+  expect_equal(overview$reference_rss, 0, tolerance = 1e-20)
 })
