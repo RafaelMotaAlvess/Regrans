@@ -31,9 +31,34 @@ The best `psi` is refitted in original units as an `lm`. A numerically flat
 profile returns an ordinary linear fit and marks the breakpoint as
 unidentified; this is distinct from numerical convergence of the search.
 
-Neither model tests for the presence of a break. The observed gap bounds are
-not a confidence interval. Coefficient standard errors and p-values are
-conditional on the selected location and omit search uncertainty.
+`test_slope_change()` tests the continuous model against its single-line
+reference.
+The default parametric bootstrap simulates independent Gaussian responses at
+the fixed observed `x` under the fitted reference line, then repeats the
+entire admissible breakpoint search. Its likelihood-ratio statistic is
+`n * log(RSS_reference / RSS_selected)` and its Monte Carlo p-value includes
+the observed statistic in both numerator and denominator. The optional Davies
+method evaluates signed fixed-breakpoint t statistics on an equally spaced
+admissible grid and applies the conservative linear-model upper bound. The
+grid point with the largest absolute statistic is not the RSS-minimizing
+breakpoint estimate.
+
+`confint()` inverts `n * log(RSS(psi) / RSS_min)` against a one-degree-of-freedom
+chi-squared cutoff for an identified continuous breakpoint. The algorithm
+splits each admissible observed gap at all internal profile extrema, solves
+threshold crossings on monotone pieces, and returns every connected accepted
+component. It flags components that reach an admissible boundary.
+`plot_break_profile()` shows the same statistic and confidence region. The
+region is approximate and relies on regular identification and the Gaussian
+model; a numerically flat profile has no informative confidence region.
+The inferential methods require positive, numerically meaningful residual
+variance, fixed `x`, and independent normal errors with constant variance.
+They have no heteroscedasticity adjustment.
+
+The discontinuous observed gap bounds are not a confidence interval.
+Coefficient standard errors and p-values in `summary()` are conditional on
+the selected location and omit search uncertainty; they do not test for a
+break.
 
 ## Result and interfaces
 
@@ -73,6 +98,9 @@ package.
 | `R/continuous_regrans.R` | Continuous hinge profile and numerical search. |
 | `R/tidiers.R` | `tidy()`, `glance()`, and `augment()` methods. |
 | `R/plot_regrans.R` | Plotting and `autoplot()` method. |
+| `R/test_slope_change.R` | Bootstrap and Davies tests for a continuous slope change. |
+| `R/confint.regrans.R` | Profile likelihood confidence region. |
+| `R/plot_break_profile.R` | Editable confidence profile plot. |
 | `tests/testthat/` | Numerical, input, interface, and plot regression tests. |
 
 The authoritative list of exports is [`NAMESPACE`](../NAMESPACE).

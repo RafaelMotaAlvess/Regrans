@@ -26,6 +26,11 @@ continuous_fit <- regrans(y ~ x, data = observations, n_min = 5,
                           model = "continuous")
 continuous_fit$location
 plot_regrans(continuous_fit)
+set.seed(1)
+test_slope_change(continuous_fit) # parametric bootstrap, 999 samples
+test_slope_change(continuous_fit, method = "davies", n_grid = 25)
+stats::confint(continuous_fit)
+plot_break_profile(continuous_fit)
 ```
 
 The vector interface remains available:
@@ -49,6 +54,41 @@ identified by this model. `model = "continuous"` fits a hinge regression;
 `location$estimate` is the RSS-minimizing breakpoint and the fitted lines meet
 there. The observed bounds show which gap contains that estimate. They are
 not a confidence interval.
+
+## Test and profile a continuous break
+
+`test_slope_change(continuous_fit)` tests a single straight line against one change
+in slope at an unknown admissible position. Its default parametric bootstrap
+simulates responses under the fitted straight line and repeats the full search
+for each sample. Set a random seed for a reproducible p-value and increase
+`n_boot` from its default of 999 when finer Monte Carlo resolution is needed.
+The p-value counts the observed fit plus bootstrap fits at least as extreme as
+it. `method = "davies"` uses fixed-breakpoint t statistics on `n_grid`
+equally spaced admissible positions. Its p-value is a conservative upper
+bound. The reported `max_statistic_location` marks the strongest statistic on
+that grid; it is distinct from `continuous_fit$location$estimate`.
+
+`stats::confint(continuous_fit)` returns an approximate profile likelihood
+confidence region for the breakpoint. Each matrix row is one connected
+component with `lower` and `upper` limits. The `boundary` attribute marks a
+component reaching an edge of the admissible domain; the `domain` attribute
+gives those edges. `plot_break_profile()` shades all components against the
+profile statistic and acceptance cutoff. A weak or multimodal profile may
+produce a wide or disconnected region. A numerically unidentified breakpoint
+has no informative region and `confint()` explains this with an error.
+
+These methods apply only to `model = "continuous"` with fixed `x` and
+independent normal errors of constant variance. The profile region uses a
+one-degree-of-freedom chi-squared approximation under regular identification;
+its coverage may be poor for weak changes or a breakpoint near the admissible
+boundary. The methods have no heteroscedasticity adjustment. The default
+discontinuous model selects an observed interval and has no numeric
+breakpoint confidence interval. The coefficient p-values shown by `summary()`
+remain conditional on the selected location and are not a break test.
+
+See [inference methods and calibration checks](inference.md) for the test
+statistics, profile construction, reproducible simulations, and coverage
+limits.
 
 `fit$model_fit` is an ordinary `lm` object for the selected model;
 `fit$reference_fit` is the single-line `lm` fit on the same observations,
