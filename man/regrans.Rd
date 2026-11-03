@@ -40,7 +40,8 @@ A numerically flat continuous RSS profile returns
 combined residual sum of squares (RSS); its two lines need not meet and the
 location is an interval between observations. The \code{"continuous"} model
 minimizes profiled RSS for a hinge regression and estimates a numeric
-breakpoint. Neither mode tests whether a break exists.
+breakpoint. Fitting alone does not test whether a break exists;
+\code{\link[=test_slope_change]{test_slope_change()}} provides a formal test for a continuous fit.
 }
 \examples{
 data(simdata)

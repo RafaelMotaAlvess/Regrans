@@ -5,7 +5,8 @@
 #' combined residual sum of squares (RSS); its two lines need not meet and the
 #' location is an interval between observations. The `"continuous"` model
 #' minimizes profiled RSS for a hinge regression and estimates a numeric
-#' breakpoint. Neither mode tests whether a break exists.
+#' breakpoint. Fitting alone does not test whether a break exists;
+#' [test_slope_change()] provides a formal test for a continuous fit.
 #'
 #' @param x A finite numeric explanatory vector, or a formula of the form
 #'   `response ~ predictor` with bare column names.
