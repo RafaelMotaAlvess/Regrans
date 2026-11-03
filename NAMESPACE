@@ -3,6 +3,8 @@
 S3method(augment,regrans)
 S3method(autoplot,regrans)
 S3method(glance,regrans)
+S3method(print,regrans)
+S3method(print,summary.regrans)
 S3method(summary,regrans)
 S3method(tidy,regrans)
 export(augment)

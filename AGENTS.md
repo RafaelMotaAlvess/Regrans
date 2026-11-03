@@ -7,17 +7,18 @@ changing behavior. Keep changes focused and report what you verified.
 
 ## Project overview
 
-Regrans is an R package that fits two independent linear regressions to
-ordered observations. `regrans()` searches eligible partitions and chooses
-the pair of fits with the lowest combined residual sum of squares. The
-current result contains `left` and `right` `lm` objects. The lines are not
-required to meet, and the selected partition is not a continuous breakpoint
-estimate. Preserve this distinction in code, documentation, and examples.
+Regrans is an R package that searches for one transition in an ordered
+predictor. `regrans()` defaults to two independent lines whose selected
+division is an observed interval, not a numeric breakpoint. With
+`model = "continuous"`, it fits a hinge model and estimates a breakpoint
+where the lines meet. Both searches minimize residual sum of squares. A
+numerically flat continuous profile reports an unidentified breakpoint and
+returns a linear fit. Preserve these distinctions in code and examples.
 
 The supported interface is defined by `NAMESPACE`: `regrans()`,
-`plot_regrans()`, and the `summary()`, `autoplot()`, `tidy()`, `glance()`,
-and `augment()` methods for `regrans` objects.
-`regranslm()` and `regrans_ancova()` are internal helpers. Do not present
+`plot_regrans()`, and the `print()`, `summary()`, `autoplot()`, `tidy()`,
+`glance()`, and `augment()` methods for `regrans` objects.
+`regranslm()` and `continuous_regrans()` are internal helpers. Do not present
 them as public API without an explicit export and documentation change. Read
 [`docs/architecture.md`](docs/architecture.md) and
 [`docs/usage.md`](docs/usage.md) before changing fit selection or describing
@@ -41,11 +42,16 @@ Use the implementation and generated `NAMESPACE` to verify current behavior;
 do not infer public support from an internal function's presence in `R/`.
 Keep package metadata in `DESCRIPTION` and documentation in the files that
 generate it. Preserve unrelated local files and changes.
+Keep internal research or presentation comparisons and their figures out of
+the public `docs/` index. Place them in the separate private research
+workspace when their audience is an academic discussion rather than package
+users or contributors.
 
 ## Behavior and compatibility
 
 - Changes to ordering, eligible splits, the minimum observations per side,
-  or the residual-sum-of-squares criterion can change statistical results.
+  the continuous profile search, or the residual-sum-of-squares criterion can
+  change statistical results.
   Review them as behavior changes and add a reproducible regression example
   or test. A passing package check alone does not establish statistical
   correctness.
@@ -55,10 +61,11 @@ generate it. Preserve unrelated local files and changes.
   can miss the formula interface, candidate scores, or tidy methods. Keep
   proposed additions separate from implemented behavior. Do not infer a
   speedup from replacing a `for` loop with `lapply()`; measure it.
-- Keep the structure of returned `regrans` objects and the behavior of
-  `summary()` and `plot_regrans()` stable unless the change explicitly calls
-  for a public API change. Update documentation and tests together with any
-  such change.
+- The common result uses `model_fit`, `segments`, `location`, `candidates`,
+  and row-aligned observations. An interval must not be presented as a point
+  estimate; conditional coefficient p-values do not test for a break. Keep
+  `summary()` and `plot_regrans()` aligned with both model types. Update
+  documentation and tests with any public API change.
 - `DESCRIPTION` declares `R (>= 4.1.0)`. Use the native pipe `|>` where it
   improves interface code, and keep the numerical search explicit. Verify
   the minimum-R policy when introducing newer language features.
@@ -98,8 +105,10 @@ whole-package formatting diffs.
   spacing, and private object names rather than disabling a linter globally.
   `ggplot2::aes()` references data columns through nonstandard evaluation;
   `utils::globalVariables()` satisfies `R CMD check` but not necessarily
-  `lintr`. Use a line-specific `# nolint: object_usage_linter.` only for
-  that verified case, never to avoid a straightforward name or spacing fix.
+  `lintr`. `lintr` also checks files separately and can flag a helper defined
+  in another `R/` file. Verify the definition and use a line-specific
+  `# nolint: object_usage_linter.` only for these two cases, never to avoid
+  a straightforward name or spacing fix.
   Keep `lintr` as a development tool, not an `Imports` dependency.
 
 ### Roxygen documentation gate

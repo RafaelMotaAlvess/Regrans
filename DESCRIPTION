@@ -10,9 +10,10 @@ Authors@R: c(
            email = "pezzuto@univali.br", role = "aut"),
     person(given = "Rafael Mota", family = "Alves",
            email = "rafaelmotaalves.sc@gmail.com", role = "aut"))
-Description: Fits two-segment linear regression models by evaluating candidate
-    split points and selecting the split that minimizes the total residual sum
-    of squares. Includes plotting and summary helpers for the fitted segments.
+Description: Fits one-transition segmented linear regressions with either two
+    independent lines or a continuous hinge. Selects the transition by
+    minimizing residual sum of squares and includes a single-line reference
+    fit, tabular summaries, and editable plots.
 Depends:
     R (>= 4.1.0)
 Imports:

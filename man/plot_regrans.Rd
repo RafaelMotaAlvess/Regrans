@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_regrans.R
 \name{plot_regrans}
 \alias{plot_regrans}
-\title{Plot two independently fitted segments}
+\title{Plot a segmented regression fit}
 \usage{
 plot_regrans(
   obj,
@@ -16,7 +16,8 @@ plot_regrans(
 \item{obj}{A \code{regrans} object.}
 
 \item{col_lines, lty_lines, lwd_lines}{Length-two vectors controlling the
-colour, line type, and line width of the left and right segments.}
+colour, line type, and line width of the left and right segments. Only
+the first value is used for an unidentified fit.}
 
 \item{...}{Optional base-plot arguments \code{pch}, \code{col}, \code{cex}, \code{xlab},
 \code{ylab}, \code{main}, \code{xlim}, and \code{ylim}. Other arguments are rejected.}
@@ -25,8 +26,9 @@ colour, line type, and line width of the left and right segments.}
 An editable \code{ggplot2} object.
 }
 \description{
-The lines are drawn only over the \code{x} values used to fit each segment.
-No continuous breakpoint is estimated or displayed.
+A discontinuous fit draws each line over its observed \code{x} range. A
+continuous fit joins the lines at the estimated breakpoint. When the
+breakpoint is unidentified, the overall fitted line is shown.
 }
 \examples{
 data(simdata)
