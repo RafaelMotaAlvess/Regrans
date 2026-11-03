@@ -2,7 +2,7 @@
 #'
 #' At a fixed breakpoint, the hinge model is linear in its coefficients.
 #' The search evaluates every admissible gap, splitting a gap at any internal
-#' maximum of its profiled RSS before applying bounded Brent optimization.
+#' maximum of its profiled RSS before bounded golden-section refinement.
 #' This avoids assuming that the profile is unimodal over the entire range.
 #'
 #' @param x,y Validated finite numeric input vectors.
@@ -24,12 +24,21 @@ continuous_regrans <- function(x, y, n_min) {
 
   scaled <- scaled_continuous_profile(ordered)
   gaps <- lapply(split_indices, function(index) {
-    best_continuous_gap(scaled$x, scaled$y, index, scaled$profile)
+    before <- scaled$progress$evaluations
+    gap <- best_continuous_gap(scaled$x, scaled$y, index,
+                               scaled$profile)
+    gap$evaluations <- scaled$progress$evaluations - before
+    gap
   })
   candidates <- score_continuous_gaps(ordered$X, split_indices, gaps,
                                       scaled$x_origin, scaled$x_span,
                                       scaled$y_scale)
-  search <- list(method = "profile_brent",
+  search <- list(method = "profile_golden_section",
+                 termination = "tolerance_reached",
+                 convergence = "converged",
+                 iterations = sum(vapply(gaps, function(gap) {
+                   gap$iterations
+                 }, integer(1))),
                  evaluations = scaled$progress$evaluations,
                  tolerance = 1e-8 * scaled$x_span)
   select_continuous_fit(ordered, sorted_rows, candidates, scaled$progress,
@@ -86,12 +95,10 @@ scaled_continuous_profile <- function(ordered) {
 score_continuous_gaps <- function(x, split_indices, gaps, x_origin,
                                   x_span, y_scale) {
   valid <- vapply(gaps, function(gap) is.finite(gap$rss), logical(1))
-  if (!any(valid)) {
-    stop("No admissible continuous fit has full rank and finite RSS.",
+  if (!all(valid)) {
+    stop("An admissible continuous fit lacks full rank or finite RSS.",
          call. = FALSE)
   }
-  split_indices <- split_indices[valid]
-  gaps <- gaps[valid]
   estimates <- vapply(gaps, function(gap) gap$estimate, numeric(1))
   left_rss <- vapply(seq_along(gaps), function(j) {
     sum(gaps[[j]]$residuals[seq_len(split_indices[[j]])]^2)
@@ -104,8 +111,19 @@ score_continuous_gaps <- function(x, split_indices, gaps, x_origin,
   candidates <- candidate_table(x, split_indices,
                                 left_rss, right_rss)
   candidates$estimate <- x_origin + x_span * estimates
+  candidates$iterations <- vapply(gaps, function(gap) {
+    gap$iterations
+  }, integer(1))
+  candidates$evaluations <- vapply(gaps, function(gap) {
+    gap$evaluations
+  }, integer(1))
+  candidates$convergence <- rep("converged", length(gaps))
+  candidates$tolerance <- vapply(gaps, function(gap) {
+    gap$tolerance
+  }, numeric(1)) * x_span
   candidates[, c("split_index", "left_n", "right_n", "left_max_x",
-                 "right_min_x", "estimate", "left_rss", "right_rss", "rss")]
+                 "right_min_x", "estimate", "left_rss", "right_rss", "rss",
+                 "iterations", "evaluations", "convergence", "tolerance")]
 }
 
 #' Refit the best continuous model or report an unidentified location
@@ -154,12 +172,12 @@ select_continuous_fit <- function(ordered, sorted_rows, candidates,
 #'
 #' Residualizing the hinge against the intercept and linear term shows that
 #' the profile has at most one internal RSS maximum and one internal minimum
-#' within a gap. Splitting at the maximum makes each Brent search unimodal.
+#' within a gap. Splitting at the maximum makes each refinement unimodal.
 #'
 #' @param x,y Scaled, sorted predictor and response.
 #' @param index Index of the last observation to the left of the gap.
 #' @param profile Function returning RSS and residuals at a breakpoint.
-#' @return Minimum RSS, breakpoint, and residuals for the gap.
+#' @return Minimum RSS, breakpoint, residuals, iterations, and tolerance.
 #' @noRd
 best_continuous_gap <- function(x, y, index, profile) {
   lower <- x[[index]]
@@ -179,18 +197,88 @@ best_continuous_gap <- function(x, y, index, profile) {
   }
 
   points <- bounds
+  refinements <- vector("list", length(bounds) - 1L)
   for (j in seq_len(length(bounds) - 1L)) {
     interval <- bounds[c(j, j + 1L)]
-    optimum <- stats::optimize(
-      function(value) profile(value)$rss,
-      interval = interval,
-      tol = min(1e-8, diff(interval) / 100)
+    refinements[[j]] <- refine_continuous_interval(
+      profile, interval[[1L]], interval[[2L]]
     )
-    points <- c(points, optimum$minimum)
+    points <- c(points, refinements[[j]]$estimate)
   }
   scores <- lapply(points, profile)
   rss <- vapply(scores, function(score) score$rss, numeric(1))
   best <- which.min(rss)
   list(estimate = points[[best]], rss = rss[[best]],
-       residuals = scores[[best]]$residuals)
+       residuals = scores[[best]]$residuals,
+       iterations = sum(vapply(refinements, function(result) {
+         result$iterations
+       }, integer(1))),
+       tolerance = max(vapply(refinements, function(result) {
+         result$tolerance
+       }, numeric(1))))
+}
+
+#' Refine a profiled RSS minimum with an explicit stopping rule
+#'
+#' Golden-section search applies after the profile is split into unimodal
+#' intervals. A numerical failure stops the fit rather than silently omitting
+#' a candidate that might contain the global minimum.
+#'
+#' @param profile Function returning RSS at a scaled breakpoint.
+#' @param lower,upper Bounds of a unimodal interval on the scaled predictor.
+#' @return The best interior point, iteration count, and achieved tolerance.
+#' @noRd
+refine_continuous_interval <- function(profile, lower, upper) {
+  width <- upper - lower
+  tolerance <- max(min(1e-8, width / 100),
+                   16 * .Machine$double.eps)
+  ratio <- (sqrt(5) - 1) / 2
+  left <- upper - ratio * width
+  right <- lower + ratio * width
+  left_rss <- checked_profile_rss(profile, left)
+  right_rss <- checked_profile_rss(profile, right)
+
+  iterations <- 0L
+  while (upper - lower > tolerance && iterations < 128L) {
+    if (left <= lower || right >= upper || left >= right) {
+      stop("Continuous search reached numeric precision before tolerance.",
+           call. = FALSE)
+    }
+    if (left_rss <= right_rss) {
+      upper <- right
+      right <- left
+      right_rss <- left_rss
+      left <- upper - ratio * (upper - lower)
+      left_rss <- checked_profile_rss(profile, left)
+    } else {
+      lower <- left
+      left <- right
+      left_rss <- right_rss
+      right <- lower + ratio * (upper - lower)
+      right_rss <- checked_profile_rss(profile, right)
+    }
+    iterations <- iterations + 1L
+  }
+  if (upper - lower > tolerance) {
+    stop("Continuous search reached its iteration limit.",
+         call. = FALSE)
+  }
+  estimate <- if (left_rss <= right_rss) left else right
+  list(estimate = estimate, iterations = iterations,
+       tolerance = upper - lower)
+}
+
+#' Evaluate a continuous profile only at numerically valid points
+#'
+#' @param profile Function returning RSS at a scaled breakpoint.
+#' @param point Scaled breakpoint to evaluate.
+#' @return One finite RSS value; errors on numerical failure.
+#' @noRd
+checked_profile_rss <- function(profile, point) {
+  rss <- profile(point)$rss
+  if (!is.finite(rss)) {
+    stop("Continuous search encountered a non-finite RSS.",
+         call. = FALSE)
+  }
+  rss
 }

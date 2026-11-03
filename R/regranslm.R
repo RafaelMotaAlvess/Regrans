@@ -41,7 +41,11 @@ regranslm <- function(x, y, n_min) {
     candidates = candidate_table(ordered$X, split_indices,
                                  scores$left_rss, scores$right_rss),
     sorted_rows = sorted_rows,
-    search = list(method = "exhaustive", evaluations = length(split_indices))
+    search = list(method = "exhaustive",
+                  termination = "exhaustive_complete",
+                  convergence = "not_applicable",
+                  iterations = NA_integer_,
+                  evaluations = length(split_indices))
   )
 }
 
