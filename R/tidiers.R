@@ -8,7 +8,8 @@
 #' @param ... Reserved for the generic; unused.
 #' @return `tidy()` returns intercept and slope rows per segment, or overall
 #'   coefficients when a continuous break is numerically unidentified.
-#'   `glance()` returns one row with model, location, and fit scores.
+#'   `glance()` returns one row with model, location, search status, and
+#'   descriptive fit measures for the selected and reference models.
 #'   `augment()` returns the original observations with `.segment`,
 #'   `.fitted`, and `.resid` columns in their original order.
 #' @examples
@@ -65,6 +66,10 @@ glance.regrans <- function(x, ...) {
   } else {
     NULL
   }
+  selected_measures <- fit_measures(x$model_fit, x$data[[x$variables[["y"]]]])
+  reference_measures <- fit_measures(
+    x$reference_fit, x$data[[x$variables[["y"]]]]
+  )
   tibble::tibble(
     nobs = nrow(x$data),
     n_min = x$n_min,
@@ -75,9 +80,35 @@ glance.regrans <- function(x, ...) {
     breakpoint = x$location$estimate,
     left_max_x = x$location$left_max_x,
     right_min_x = x$location$right_min_x,
+    convergence = x$search$convergence,
     left_rss = if (identified) selected$left_rss else NA_real_,
     right_rss = if (identified) selected$right_rss else NA_real_,
-    rss = sum(stats::residuals(x$model_fit)^2)
+    rss = selected_measures$rss,
+    rmse = selected_measures$rmse,
+    r_squared = selected_measures$r_squared,
+    reference_rss = reference_measures$rss,
+    reference_rmse = reference_measures$rmse,
+    reference_r_squared = reference_measures$r_squared
+  )
+}
+
+#' Calculate descriptive measures on the training observations
+#'
+#' RMSE uses `n` as its denominator so it is comparable across the two
+#' fitted models. R-squared is undefined for a constant response. None of
+#' these measures tests whether a searched breakpoint exists.
+#'
+#' @param model A fitted `lm` model on the training observations.
+#' @param response The original numeric response vector.
+#' @return A list with RSS, RMSE, and R-squared.
+#' @noRd
+fit_measures <- function(model, response) {
+  rss <- sum(stats::residuals(model)^2)
+  total_ss <- sum((response - mean(response))^2)
+  list(
+    rss = rss,
+    rmse = sqrt(rss / length(response)),
+    r_squared = if (total_ss > 0) 1 - rss / total_ss else NA_real_
   )
 }
 

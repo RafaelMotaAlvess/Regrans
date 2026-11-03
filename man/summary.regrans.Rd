@@ -15,7 +15,8 @@
 }
 \value{
 \code{summary()} returns a \code{summary.regrans} object with model type,
-location, segment coefficients, RSS, and the underlying \code{summary.lm}.
+location, search status, segment coefficients, descriptive measures for
+the selected and reference fits, and the selected \code{summary.lm}.
 }
 \description{
 The displayed coefficient statistics are conditional on the selected

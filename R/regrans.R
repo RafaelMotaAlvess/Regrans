@@ -14,13 +14,18 @@
 #' @param data A data frame containing the columns in `x` when `x` is a
 #'   formula.
 #' @param model Either `"discontinuous"` (the default) or `"continuous"`.
-#' @return An object of class `regrans`. `model_fit` is an `lm` object;
-#'   `segments` gives its fitted lines. `location` contains an `estimate`
-#'   only for an identified continuous break. Its observed bounds identify
-#'   the selected gap, not a confidence interval. `candidates` records the
-#'   admissible gaps and RSS values. `data`, `segment`, `fitted_values`, and
-#'   `residual_values` retain the original row order. A numerically flat
-#'   continuous RSS profile returns `location$status = "unidentified"`,
+#' @return An object of class `regrans`. `model_fit` is the selected `lm`;
+#'   `reference_fit` is a single-line `lm` on the same observations, in their
+#'   original order. `segments` gives the selected fitted lines. `location`
+#'   contains an `estimate` only for an identified continuous break. Its
+#'   observed bounds identify the selected gap, not a confidence interval.
+#'   `candidates` records the admissible gaps and RSS values. `data`,
+#'   `segment`, `fitted_values`, and `residual_values` retain the original
+#'   row order. `search$convergence`
+#'   reports numerical convergence for the continuous search and
+#'   `"not_applicable"` for complete enumeration in the discontinuous search.
+#'   A numerically flat continuous RSS profile returns
+#'   `location$status = "unidentified"`,
 #'   `estimate = NA`, and an ordinary linear `model_fit`.
 #' @examples
 #' data(simdata)
@@ -156,6 +161,10 @@ assemble_regrans_fit <- function(fit, input, n_min) {
   fit$data <- input$data
   fit$variables <- c(x = input$predictor, y = input$response)
   fit$n_min <- n_min
+  fit$reference_fit <- stats::lm(
+    Y ~ X,
+    data = data.frame(X = input$x, Y = input$y)
+  )
 
   sorted_rows <- fit$sorted_rows
   fit$segment <- character(length(sorted_rows))

@@ -20,13 +20,18 @@ formula.}
 \item{model}{Either \code{"discontinuous"} (the default) or \code{"continuous"}.}
 }
 \value{
-An object of class \code{regrans}. \code{model_fit} is an \code{lm} object;
-\code{segments} gives its fitted lines. \code{location} contains an \code{estimate}
-only for an identified continuous break. Its observed bounds identify
-the selected gap, not a confidence interval. \code{candidates} records the
-admissible gaps and RSS values. \code{data}, \code{segment}, \code{fitted_values}, and
-\code{residual_values} retain the original row order. A numerically flat
-continuous RSS profile returns \code{location$status = "unidentified"},
+An object of class \code{regrans}. \code{model_fit} is the selected \code{lm};
+\code{reference_fit} is a single-line \code{lm} on the same observations, in their
+original order. \code{segments} gives the selected fitted lines. \code{location}
+contains an \code{estimate} only for an identified continuous break. Its
+observed bounds identify the selected gap, not a confidence interval.
+\code{candidates} records the admissible gaps and RSS values. \code{data},
+\code{segment}, \code{fitted_values}, and \code{residual_values} retain the original
+row order. \code{search$convergence}
+reports numerical convergence for the continuous search and
+\code{"not_applicable"} for complete enumeration in the discontinuous search.
+A numerically flat continuous RSS profile returns
+\code{location$status = "unidentified"},
 \code{estimate = NA}, and an ordinary linear \code{model_fit}.
 }
 \description{

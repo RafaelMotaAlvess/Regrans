@@ -8,19 +8,33 @@
 #' @param correlation,symbolic_cor Arguments passed to `summary.lm()`.
 #' @param ... Further arguments passed to `summary.lm()`.
 #' @return `summary()` returns a `summary.regrans` object with model type,
-#'   location, segment coefficients, RSS, and the underlying `summary.lm`.
+#'   location, search status, segment coefficients, descriptive measures for
+#'   the selected and reference fits, and the selected `summary.lm`.
 #' @examples
 #' data(simdata)
 #' summary(regrans(simdata$x, simdata$y))
 #' @export
 summary.regrans <- function(object, correlation = FALSE,
                             symbolic_cor = FALSE, ...) {
+  response <- object$data[[object$variables[["y"]]]]
+  # Defined in tidiers.R; lintr checks files separately.
+  # nolint next: object_usage_linter.
+  measures <- fit_measures(object$model_fit, response)
+  # Defined in tidiers.R; lintr checks files separately.
+  # nolint next: object_usage_linter.
+  reference <- fit_measures(object$reference_fit, response)
   result <- list(
     model = object$model,
     location = object$location,
+    search = object$search,
     # Defined in tidiers.R; lintr checks files separately.
     coefficients = tidy.regrans(object), # nolint: object_usage_linter.
-    rss = sum(stats::residuals(object$model_fit)^2),
+    rss = measures$rss,
+    rmse = measures$rmse,
+    r_squared = measures$r_squared,
+    reference_rss = reference$rss,
+    reference_rmse = reference$rmse,
+    reference_r_squared = reference$r_squared,
     nobs = nrow(object$data),
     model_summary = summary(object$model_fit, correlation = correlation,
                             symbolic.cor = symbolic_cor, ...)
@@ -48,7 +62,18 @@ print.summary.regrans <- function(x, ...) {
   } else {
     cat("Breakpoint numerically unidentified; linear fit shown.\n")
   }
-  cat("Residual sum of squares: ", format(x$rss), "\n", sep = "")
+  if (x$search$convergence == "converged") {
+    cat("Continuous search converged after ", x$search$iterations,
+        " iterations.\n", sep = "")
+  } else {
+    cat("Exhaustive search completed; numerical convergence does not apply.\n")
+  }
+  cat("Selected fit: RSS = ", format(x$rss),
+      ", RMSE = ", format(x$rmse),
+      ", R-squared = ", format(x$r_squared), "\n", sep = "")
+  cat("Linear reference: RSS = ", format(x$reference_rss),
+      ", RMSE = ", format(x$reference_rmse),
+      ", R-squared = ", format(x$reference_r_squared), "\n", sep = "")
   print(as.data.frame(x$coefficients), row.names = FALSE)
   cat("Coefficient statistics are conditional on the selected location.\n")
   invisible(x)

@@ -26,7 +26,8 @@ defined by this interface.}
 \value{
 \code{tidy()} returns intercept and slope rows per segment, or overall
 coefficients when a continuous break is numerically unidentified.
-\code{glance()} returns one row with model, location, and fit scores.
+\code{glance()} returns one row with model, location, search status, and
+descriptive fit measures for the selected and reference models.
 \code{augment()} returns the original observations with \code{.segment},
 \code{.fitted}, and \code{.resid} columns in their original order.
 }
