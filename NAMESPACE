@@ -2,6 +2,7 @@
 
 S3method(augment,regrans)
 S3method(autoplot,regrans)
+S3method(confint,regrans)
 S3method(glance,regrans)
 S3method(print,regrans)
 S3method(print,summary.regrans)
@@ -9,8 +10,10 @@ S3method(summary,regrans)
 S3method(tidy,regrans)
 export(augment)
 export(glance)
+export(plot_break_profile)
 export(plot_regrans)
 export(regrans)
+export(test_slope_change)
 export(tidy)
 importFrom(generics,
   augment,

@@ -12,8 +12,10 @@ Authors@R: c(
            email = "rafaelmotaalves.sc@gmail.com", role = "aut"))
 Description: Fits one-transition segmented linear regressions with either two
     independent lines or a continuous hinge. Selects the transition by
-    minimizing residual sum of squares and includes a single-line reference
-    fit, tabular summaries, and editable plots.
+    minimizing residual sum of squares. For continuous fits, provides a
+    parametric bootstrap and a Davies test for a slope change and an
+    approximate profile confidence region for the breakpoint. Includes a
+    single-line reference fit, tabular summaries, and editable plots.
 Depends:
     R (>= 4.1.0)
 Imports:

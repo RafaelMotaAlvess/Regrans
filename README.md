@@ -11,7 +11,7 @@
 
 ## Overview
 
-Regrans helps you explore data whose relationship changes across the range of an explanatory variable. Choose two independent lines that may jump, or two lines that meet at an estimated breakpoint. Both options search for one transition by minimizing residual sum of squares. You can inspect the fitted lines and edit the resulting plot.
+Regrans helps you explore data whose relationship changes across the range of an explanatory variable. Choose two independent lines that may jump, or two lines that meet at an estimated breakpoint. Both options search for one transition by minimizing residual sum of squares. For the continuous model, you can test for a slope change and inspect an approximate confidence region for its location.
 
 ## Installation
 
@@ -47,13 +47,17 @@ continuous_fit <- regrans(y ~ x, data = observations,
                           model = "continuous")
 continuous_fit$location$estimate
 plot_regrans(continuous_fit)
+test_slope_change(continuous_fit, n_boot = 199) # bootstrap; 999 by default
+stats::confint(continuous_fit)           # profile confidence region
+plot_break_profile(continuous_fit)       # editable ggplot2 graphic
 ```
 
-The default `"discontinuous"` fit permits a jump and reports an interval, not a numeric breakpoint. The `"continuous"` fit joins the lines at an estimated point. If the continuous profile is numerically flat, `location$status` is `"unidentified"` and a single linear fit is returned. `augment(fit)` adds fitted values, residuals, and segment labels to the original rows. See the [usage guide](docs/usage.md) for data requirements and interpretation.
+The default `"discontinuous"` fit permits a jump and reports an observed interval, not a numeric breakpoint. The `"continuous"` fit joins the lines at an estimated point. `test_slope_change()` and `confint()` apply only to that continuous fit and assume fixed predictor values and independent normal errors with constant variance. If the continuous profile is numerically flat, `location$status` is `"unidentified"` and a single linear fit is returned. `augment(fit)` adds fitted values, residuals, and segment labels to the original rows. See the [usage guide](docs/usage.md) for data requirements and interpretation.
 
 ## Documentation
 
 - [Usage and current scope](docs/usage.md)
+- [Inference methods and calibration](docs/inference.md)
 - [Installation on Linux, Windows, and macOS](docs/installation.md)
 - [Documentation for contributors](docs/README.md)
 - [Changes in development and released versions](NEWS.md)

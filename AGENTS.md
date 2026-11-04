@@ -55,6 +55,11 @@ users or contributors.
   Review them as behavior changes and add a reproducible regression example
   or test. A passing package check alone does not establish statistical
   correctness.
+- When adding inference to the continuous model, re-run the full admissible
+  search in each null bootstrap sample and check residual variance relative to
+  response variation. Floating-point residuals from a perfect line can be
+  positive yet too small to support a test. Validate coverage and rejection
+  rates under stated fixed-`x` error assumptions before claiming performance.
 - When comparing Regrans with another R package, identify both versions and
   verify current capabilities in code, exports, documentation, or an executed
   example. Recheck comparative tables after an API change: older inventories
